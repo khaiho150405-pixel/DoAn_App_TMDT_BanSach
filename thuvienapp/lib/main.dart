@@ -1,9 +1,10 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:flutter_dotenv/flutter_dotenv.dart';
+import 'package:thuvienapp/screens/login_screen.dart';
 
 // 1. Thay đổi import từ login_screen sang home_screen để test trực tiếp
-import 'screens/home_screen.dart';
+import 'screens/KhachHang/home_screen.dart';
 import 'providers/user_provider.dart';
 import 'providers/cart_provider.dart';
 
@@ -41,7 +42,7 @@ class MyApp extends StatelessWidget {
         colorScheme: ColorScheme.fromSeed(seedColor: Colors.deepOrange),
       ),
       // 2. Sửa thuộc tính home này thành HomeScreen để khởi chạy thẳng vào trang chủ
-      home: const HomeScreen(),
+      home: const LoginScreen(),
     );
   }
 }
