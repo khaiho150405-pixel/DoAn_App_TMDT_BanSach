@@ -4,6 +4,7 @@ class Sach {
   final String? theLoai;
   final String? hinhAnh;
   final String? tenTacGia;
+  final String? nhaXuatBan;
   final double giaGoc;
   final double giaBanThucTe;
   final int phanTramGiam;
@@ -15,6 +16,7 @@ class Sach {
     this.theLoai,
     this.hinhAnh,
     this.tenTacGia,
+    this.nhaXuatBan,
     required this.giaGoc,
     required this.giaBanThucTe,
     required this.phanTramGiam,
@@ -25,9 +27,10 @@ class Sach {
     return Sach(
       maSach: json['masach'] ?? 0,
       tenSach: json['tensach'] ?? 'Chưa có tên',
-      theLoai: json['theloai'],
+      theLoai: json['tenTheLoai'] ?? json['theloai'],
       hinhAnh: json['hinhanh'] ?? 'default_book.jpg',
       tenTacGia: json['tenTacGia'],
+      nhaXuatBan: json['tenNxb'],
       giaGoc: (json['giaGoc'] ?? 0).toDouble(),
       giaBanThucTe: (json['giaBanThucTe'] ?? 0).toDouble(),
       phanTramGiam: json['phanTramGiam'] ?? 0,
