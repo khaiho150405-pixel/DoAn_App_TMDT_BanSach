@@ -7,6 +7,8 @@ import 'package:thuvienapp/screens/login_screen.dart';
 import 'screens/KhachHang/home_screen.dart';
 import 'providers/user_provider.dart';
 import 'providers/cart_provider.dart';
+import 'providers/order_provider.dart';
+import 'theme/app_theme.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
@@ -14,7 +16,8 @@ void main() async {
   try {
     await dotenv.load(fileName: ".env");
   } catch (e) {
-    print("Không tìm thấy file .env. Hãy tạo file .env ở thư mục gốc và thêm GEMINI_API_KEY vào đó.");
+    print(
+        "Không tìm thấy file .env. Hãy tạo file .env ở thư mục gốc và thêm GEMINI_API_KEY vào đó.");
   }
 
   runApp(
@@ -22,6 +25,7 @@ void main() async {
       providers: [
         ChangeNotifierProvider(create: (_) => UserProvider()),
         ChangeNotifierProvider(create: (_) => CartProvider()),
+        ChangeNotifierProvider(create: (_) => OrderProvider()),
       ],
       child: const MyApp(),
     ),
@@ -36,11 +40,7 @@ class MyApp extends StatelessWidget {
     return MaterialApp(
       debugShowCheckedModeBanner: false,
       title: 'E-BookStore Test',
-      theme: ThemeData(
-        primarySwatch: Colors.deepOrange,
-        useMaterial3: true,
-        colorScheme: ColorScheme.fromSeed(seedColor: Colors.deepOrange),
-      ),
+      theme: AppTheme.lightTheme,
       // 2. Sửa thuộc tính home này thành HomeScreen để khởi chạy thẳng vào trang chủ
       home: const LoginScreen(),
     );

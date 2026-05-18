@@ -68,18 +68,18 @@ class _LoginScreenState extends State<LoginScreen> {
           switch (loggedInUser.roleId) {
             case 1:
             // nextScreen = const AdminHomeScreen(); // Chờ tạo màn hình Admin
-              nextScreen = const HomeScreen(); // Tạm thời đẩy về Home
+              nextScreen = HomeScreen(user: loggedInUser); // Tạm thời đẩy về Home
               break;
             case 2:
               nextScreen = const SaleHomeScreen(); // Vào thẳng Dashboard Sale
               break;
             case 3:
             // nextScreen = const ThuKhoHomeScreen(); // Chờ cập nhật màn hình Kho
-              nextScreen = const HomeScreen();
+              nextScreen = HomeScreen(user: loggedInUser);
               break;
             case 4:
             default:
-              nextScreen = const HomeScreen(); // Khách hàng vào trang mua sắm
+              nextScreen = HomeScreen(user: loggedInUser); // Khách hàng vào trang mua sắm
               break;
           }
 

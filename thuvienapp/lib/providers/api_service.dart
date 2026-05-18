@@ -209,4 +209,49 @@ class ApiService {
       return {'success': false, 'message': 'Không thể kết nối server!'};
     }
   }
+
+  // ======================================================================
+  //                    THÔNG BÁO (Sách mới, Khuyến mãi)
+  // ======================================================================
+
+  /// Lấy danh sách thông báo sách mới / khuyến mãi
+  Future<List<Map<String, dynamic>>> fetchNewBooksNews() async {
+    try {
+      final response = await http.get(
+        Uri.parse('$baseUrl/ThongBao/SachMoi'),
+      );
+      if (response.statusCode == 200) {
+        List jsonResponse = json.decode(response.body);
+        return jsonResponse.cast<Map<String, dynamic>>();
+      } else {
+        // Nếu API chưa có endpoint này, trả về mảng rỗng
+        return [];
+      }
+    } catch (e) {
+      print('Lỗi fetchNewBooksNews: $e');
+      return []; // Trả về mảng rỗng nếu server chưa hỗ trợ
+    }
+  }
+
+  // ======================================================================
+  //                    CHI TIẾT SÁCH
+  // ======================================================================
+
+  /// Lấy chi tiết 1 cuốn sách theo mã sách
+  Future<Sach?> fetchBookDetail(int maSach) async {
+    try {
+      final response = await http.get(
+        Uri.parse('$baseUrl/Sach/$maSach'),
+      );
+      if (response.statusCode == 200) {
+        final data = json.decode(response.body);
+        return Sach.fromJson(data);
+      } else {
+        return null;
+      }
+    } catch (e) {
+      print('Lỗi fetchBookDetail: $e');
+      return null;
+    }
+  }
 }

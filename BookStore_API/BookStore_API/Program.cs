@@ -1,12 +1,19 @@
 using BookStore_API.Models;
 using Microsoft.EntityFrameworkCore;
 using Scalar.AspNetCore;
+using BookStoreAPI.Repositories;
+using BookStoreAPI.Services;
 
 var builder = WebApplication.CreateBuilder(args);
 
 builder.Services.AddDbContext<BookStoreContext>(options =>
     options.UseSqlServer(builder.Configuration.GetConnectionString("DefaultConnection")));
 // Add services to the container.
+
+
+
+builder.Services.AddScoped<IOrderRepository, OrderRepository>();
+builder.Services.AddScoped<IOrderService, OrderService>();
 
 builder.Services.AddControllers();
 // Learn more about configuring OpenAPI at https://aka.ms/aspnet/openapi
