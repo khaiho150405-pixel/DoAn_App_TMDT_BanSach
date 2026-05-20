@@ -25,9 +25,11 @@ class _HomeScreenState extends State<HomeScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: Colors.grey[100], // Màu nền hơi xám cho nổi bật thẻ trắng
+      backgroundColor:
+          Colors.grey[100], // Màu nền hơi xám cho nổi bật thẻ trắng
       appBar: AppBar(
-        title: const Text('E-BookStore', style: TextStyle(fontWeight: FontWeight.bold)),
+        title: const Text('E-BookStore',
+            style: TextStyle(fontWeight: FontWeight.bold)),
         backgroundColor: Colors.deepOrange,
         foregroundColor: Colors.white,
         elevation: 0,
@@ -43,7 +45,8 @@ class _HomeScreenState extends State<HomeScreen> {
                     onPressed: () {
                       // TODO: Điều hướng sang trang Chi tiết Giỏ Hàng
                       ScaffoldMessenger.of(context).showSnackBar(
-                        const SnackBar(content: Text('Tính năng Giỏ hàng đang xây dựng!')),
+                        const SnackBar(
+                            content: Text('Tính năng Giỏ hàng đang xây dựng!')),
                       );
                     },
                   ),
@@ -58,10 +61,14 @@ class _HomeScreenState extends State<HomeScreen> {
                           color: Colors.red,
                           borderRadius: BorderRadius.circular(10),
                         ),
-                        constraints: const BoxConstraints(minWidth: 16, minHeight: 16),
+                        constraints:
+                            const BoxConstraints(minWidth: 16, minHeight: 16),
                         child: Text(
                           '${cart.itemCount}',
-                          style: const TextStyle(color: Colors.white, fontSize: 10, fontWeight: FontWeight.bold),
+                          style: const TextStyle(
+                              color: Colors.white,
+                              fontSize: 10,
+                              fontWeight: FontWeight.bold),
                           textAlign: TextAlign.center,
                         ),
                       ),
@@ -80,15 +87,20 @@ class _HomeScreenState extends State<HomeScreen> {
         builder: (context, snapshot) {
           // Trạng thái 1: Đang chờ mạng (Hiện vòng xoay)
           if (snapshot.connectionState == ConnectionState.waiting) {
-            return const Center(child: CircularProgressIndicator(color: Colors.deepOrange));
+            return const Center(
+                child: CircularProgressIndicator(color: Colors.deepOrange));
           }
           // Trạng thái 2: Lỗi mạng hoặc lỗi server
           else if (snapshot.hasError) {
-            return Center(child: Text('Lỗi tải dữ liệu: ${snapshot.error}', style: const TextStyle(color: Colors.red)));
+            return Center(
+                child: Text('Lỗi tải dữ liệu: ${snapshot.error}',
+                    style: const TextStyle(color: Colors.red)));
           }
           // Trạng thái 3: Call API thành công nhưng CSDL chưa có sách nào
           else if (!snapshot.hasData || snapshot.data!.isEmpty) {
-            return const Center(child: Text('Kho sách hiện đang trống!', style: TextStyle(fontSize: 16)));
+            return const Center(
+                child: Text('Kho sách hiện đang trống!',
+                    style: TextStyle(fontSize: 16)));
           }
 
           // Trạng thái 4: Có dữ liệu -> Hiển thị danh sách
@@ -97,8 +109,9 @@ class _HomeScreenState extends State<HomeScreen> {
           return GridView.builder(
             padding: const EdgeInsets.all(12),
             gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
-              crossAxisCount: 2,       // 2 cột sách
-              childAspectRatio: 0.65,  // Chỉnh tỷ lệ để không bị lẹm chữ (cao/rộng)
+              crossAxisCount: 2, // 2 cột sách
+              childAspectRatio:
+                  0.65, // Chỉnh tỷ lệ để không bị lẹm chữ (cao/rộng)
               crossAxisSpacing: 12,
               mainAxisSpacing: 12,
             ),
@@ -128,7 +141,10 @@ class BookCard extends StatelessWidget {
         color: Colors.white,
         borderRadius: BorderRadius.circular(12),
         boxShadow: [
-          BoxShadow(color: Colors.black.withOpacity(0.05), blurRadius: 8, spreadRadius: 2),
+          BoxShadow(
+              color: Colors.black.withOpacity(0.05),
+              blurRadius: 8,
+              spreadRadius: 2),
         ],
       ),
       child: ClipRRect(
@@ -147,11 +163,14 @@ class BookCard extends StatelessWidget {
                     // Hiển thị vòng xoay lúc ảnh đang tải
                     loadingBuilder: (context, child, loadingProgress) {
                       if (loadingProgress == null) return child;
-                      return const Center(child: CircularProgressIndicator(strokeWidth: 2));
+                      return const Center(
+                          child: CircularProgressIndicator(strokeWidth: 2));
                     },
                     // Hiển thị icon xám nếu ảnh bị lỗi (không tìm thấy trong wwwroot)
-                    errorBuilder: (context, error, stackTrace) =>
-                        Container(color: Colors.grey[300], child: const Icon(Icons.book, size: 50, color: Colors.grey)),
+                    errorBuilder: (context, error, stackTrace) => Container(
+                        color: Colors.grey[300],
+                        child: const Icon(Icons.book,
+                            size: 50, color: Colors.grey)),
                   ),
 
                   // Nhãn giảm giá màu đỏ góc trên bên trái
@@ -160,14 +179,18 @@ class BookCard extends StatelessWidget {
                       top: 8,
                       left: 8,
                       child: Container(
-                        padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                        padding: const EdgeInsets.symmetric(
+                            horizontal: 8, vertical: 4),
                         decoration: BoxDecoration(
                           color: Colors.red,
                           borderRadius: BorderRadius.circular(12),
                         ),
                         child: Text(
                           '-${sach.phanTramGiam}%',
-                          style: const TextStyle(color: Colors.white, fontWeight: FontWeight.bold, fontSize: 12),
+                          style: const TextStyle(
+                              color: Colors.white,
+                              fontWeight: FontWeight.bold,
+                              fontSize: 12),
                         ),
                       ),
                     ),
@@ -183,9 +206,11 @@ class BookCard extends StatelessWidget {
                 children: [
                   Text(
                     sach.tenSach,
-                    style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 14),
+                    style: const TextStyle(
+                        fontWeight: FontWeight.bold, fontSize: 14),
                     maxLines: 2,
-                    overflow: TextOverflow.ellipsis, // Quá dài sẽ biến thành "..."
+                    overflow:
+                        TextOverflow.ellipsis, // Quá dài sẽ biến thành "..."
                   ),
                   const SizedBox(height: 6),
 
@@ -194,18 +219,27 @@ class BookCard extends StatelessWidget {
                     // Giá gốc gạch ngang
                     Text(
                       '${sach.giaGoc.toStringAsFixed(0)} đ',
-                      style: const TextStyle(fontSize: 12, color: Colors.grey, decoration: TextDecoration.lineThrough),
+                      style: const TextStyle(
+                          fontSize: 12,
+                          color: Colors.grey,
+                          decoration: TextDecoration.lineThrough),
                     ),
                     // Giá sale màu đỏ
                     Text(
                       '${sach.giaBanThucTe.toStringAsFixed(0)} đ',
-                      style: const TextStyle(fontSize: 16, color: Colors.red, fontWeight: FontWeight.bold),
+                      style: const TextStyle(
+                          fontSize: 16,
+                          color: Colors.red,
+                          fontWeight: FontWeight.bold),
                     ),
                   ] else ...[
                     // Không sale thì hiện giá đen bình thường
                     Text(
                       '${sach.giaGoc.toStringAsFixed(0)} đ',
-                      style: const TextStyle(fontSize: 16, color: Colors.deepOrange, fontWeight: FontWeight.bold),
+                      style: const TextStyle(
+                          fontSize: 16,
+                          color: Colors.deepOrange,
+                          fontWeight: FontWeight.bold),
                     ),
                   ],
                 ],

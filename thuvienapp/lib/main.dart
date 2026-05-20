@@ -1,19 +1,22 @@
 import 'package:flutter/material.dart';
-import 'package:provider/provider.dart';
 import 'package:flutter_dotenv/flutter_dotenv.dart';
+import 'package:provider/provider.dart';
 
-// 1. Thay đổi import từ login_screen sang home_screen để test trực tiếp
-import 'screens/home_screen.dart';
-import 'providers/user_provider.dart';
 import 'providers/cart_provider.dart';
+import 'providers/dashboard_provider.dart';
+import 'providers/user_provider.dart';
+import 'providers/admin_user_provider.dart';
+import 'providers/promotion_provider.dart';
+import 'screens/admin/admin_main_screen.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
 
   try {
-    await dotenv.load(fileName: ".env");
+    await dotenv.load(fileName: '.env');
   } catch (e) {
-    print("Không tìm thấy file .env. Hãy tạo file .env ở thư mục gốc và thêm GEMINI_API_KEY vào đó.");
+    debugPrint(
+        'Missing .env file. Add it at the Flutter project root if needed.');
   }
 
   runApp(
@@ -21,6 +24,9 @@ void main() async {
       providers: [
         ChangeNotifierProvider(create: (_) => UserProvider()),
         ChangeNotifierProvider(create: (_) => CartProvider()),
+        ChangeNotifierProvider(create: (_) => DashboardProvider()),
+        ChangeNotifierProvider(create: (_) => AdminUserProvider()),
+        ChangeNotifierProvider(create: (_) => PromotionProvider()),
       ],
       child: const MyApp(),
     ),
@@ -36,12 +42,18 @@ class MyApp extends StatelessWidget {
       debugShowCheckedModeBanner: false,
       title: 'E-BookStore Test',
       theme: ThemeData(
-        primarySwatch: Colors.deepOrange,
+        primarySwatch: Colors.blue,
         useMaterial3: true,
-        colorScheme: ColorScheme.fromSeed(seedColor: Colors.deepOrange),
+        colorScheme: ColorScheme.fromSeed(seedColor: Colors.blue),
+        cardTheme: const CardThemeData(
+          surfaceTintColor: Colors.transparent,
+          color: Colors.white,
+        ),
       ),
-      // 2. Sửa thuộc tính home này thành HomeScreen để khởi chạy thẳng vào trang chủ
-      home: const HomeScreen(),
+      home: const AdminMainScreen(),
+      routes: {
+        '/admin-dashboard': (_) => const AdminMainScreen(),
+      },
     );
   }
 }

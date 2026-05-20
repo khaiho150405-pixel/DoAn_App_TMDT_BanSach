@@ -30,7 +30,8 @@ class CartProvider with ChangeNotifier {
   }
 
   void addItem(Sach sach) {
-    var existingIndex = _items.indexWhere((item) => item.sach.maSach == sach.maSach);
+    var existingIndex =
+        _items.indexWhere((item) => item.sach.maSach == sach.maSach);
     if (existingIndex >= 0) {
       _items[existingIndex].soLuong += 1;
     } else {
