@@ -7,14 +7,6 @@ using System;
 
 namespace BookStoreAPI.Repositories
 {
-    public interface IOrderRepository
-    {
-        Task<Donhang> CreateOrderAsync(Donhang order, List<Chitietdonhang> details);
-        Task<List<Donhang>> GetOrdersByCustomerIdAsync(int customerId);
-        Task<Donhang?> GetOrderByIdAsync(int orderId);
-        Task<List<Chitietdonhang>> GetOrderDetailsAsync(int orderId);
-    }
-
     public class OrderRepository : IOrderRepository
     {
         private readonly BookStoreContext _context;
@@ -69,6 +61,65 @@ namespace BookStoreAPI.Repositories
                 .Include(c => c.MasachNavigation)
                 .Where(c => c.Madh == orderId)
                 .ToListAsync();
+        }
+
+        public async Task<bool> CancelOrderAsync(int orderId)
+        {
+            var order = await _context.Donhangs.FirstOrDefaultAsync(o => o.Madh == orderId);
+            if (order == null) return false;
+
+            if (order.Trangthaidonhang == "Chờ xác nhận")
+            {
+                order.Trangthaidonhang = "Đã hủy";
+                await _context.SaveChangesAsync();
+                return true;
+            }
+            return false;
+        }
+
+        public async Task<List<Donhang>> GetPendingOrdersAsync()
+        {
+            return await _context.Donhangs
+                .Include(o => o.MakhNavigation)
+                .Where(o => o.Trangthaidonhang == "Chờ xác nhận")
+                .OrderByDescending(o => o.Ngaydat)
+                .ToListAsync();
+        }
+
+        public async Task<bool> ConfirmOrderAsync(int orderId)
+        {
+            using var transaction = await _context.Database.BeginTransactionAsync();
+            try
+            {
+                var order = await _context.Donhangs
+                    .Include(o => o.Chitietdonhangs)
+                    .FirstOrDefaultAsync(o => o.Madh == orderId);
+                
+                if (order == null || order.Trangthaidonhang != "Chờ xác nhận")
+                    return false;
+
+                order.Trangthaidonhang = "Đang chuẩn bị hàng";
+
+                foreach (var detail in order.Chitietdonhangs)
+                {
+                    var sach = await _context.Saches.FirstOrDefaultAsync(s => s.Masach == detail.Masach);
+                    if (sach != null)
+                    {
+                        sach.Soluongton -= detail.Soluong;
+                        
+                        if (sach.Soluongton < 0) sach.Soluongton = 0;
+                    }
+                }
+
+                await _context.SaveChangesAsync();
+                await transaction.CommitAsync();
+                return true;
+            }
+            catch
+            {
+                await transaction.RollbackAsync();
+                throw;
+            }
         }
     }
 }

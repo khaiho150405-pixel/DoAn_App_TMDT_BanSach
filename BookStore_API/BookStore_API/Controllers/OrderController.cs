@@ -69,5 +69,60 @@ namespace BookStoreAPI.Controllers
                 return StatusCode(500, new { success = false, message = $"Lỗi hệ thống: {ex.Message}" });
             }
         }
+        [HttpPut("cancel/{orderId}")]
+        public async Task<IActionResult> CancelOrder(int orderId)
+        {
+            try
+            {
+                var result = await _orderService.CancelOrderAsync(orderId);
+                if (!result)
+                {
+                    return BadRequest(new { success = false, message = "Không thể hủy đơn hàng này" });
+                }
+                return Ok(new { success = true, message = "Hủy đơn hàng thành công" });
+            }
+            catch (System.Exception ex)
+            {
+                _logger.LogError(ex, "Lỗi CancelOrder: {Message}", ex.Message);
+                return StatusCode(500, new { success = false, message = $"Lỗi hệ thống: {ex.Message}" });
+            }
+        }
+
+        [HttpGet("pending")]
+        public async Task<IActionResult> GetPendingOrders()
+        {
+            try
+            {
+                var orders = await _orderService.GetPendingOrdersAsync();
+                return Ok(new { success = true, message = "Success", data = orders });
+            }
+            catch (System.Exception ex)
+            {
+                _logger.LogError(ex, "Lỗi GetPendingOrders: {Message}", ex.Message);
+                return StatusCode(500, new { success = false, message = $"Lỗi hệ thống: {ex.Message}" });
+            }
+        }
+
+        [HttpPut("test-confirm/{orderId}")]
+        public async Task<IActionResult> TestConfirmOrder(int orderId)
+        {
+            try
+            {
+                _logger.LogInformation("Testing Confirm Order: {OrderId}", orderId);
+                var result = await _orderService.ConfirmOrderAsync(orderId);
+                if (!result)
+                {
+                    return BadRequest(new { success = false, message = "Không thể xác nhận đơn hàng này (không tồn tại hoặc không ở trạng thái Chờ xác nhận)" });
+                }
+                
+                var updatedOrder = await _orderService.GetOrderDetailAsync(orderId);
+                return Ok(new { success = true, message = "Xác nhận đơn hàng thành công", data = updatedOrder });
+            }
+            catch (System.Exception ex)
+            {
+                _logger.LogError(ex, "Lỗi TestConfirmOrder: {Message}", ex.Message);
+                return StatusCode(500, new { success = false, message = $"Lỗi hệ thống: {ex.Message}" });
+            }
+        }
     }
 }

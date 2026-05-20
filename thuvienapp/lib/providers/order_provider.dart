@@ -47,4 +47,14 @@ class OrderProvider with ChangeNotifier {
       return null; // Return null if failed, the screen will handle it
     }
   }
+
+  Future<void> cancelOrder(int orderId, int customerId) async {
+    try {
+      await _orderService.cancelOrder(orderId);
+      // Reload orders to reflect changes
+      await loadCustomerOrders(customerId);
+    } catch (e) {
+      throw Exception(e.toString());
+    }
+  }
 }

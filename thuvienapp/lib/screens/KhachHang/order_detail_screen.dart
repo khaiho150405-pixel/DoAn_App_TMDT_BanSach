@@ -2,8 +2,9 @@ import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:cached_network_image/cached_network_image.dart';
 import '../../models/order_model.dart';
-import '../../providers/order_provider.dart';
 import '../../providers/api_service.dart';
+import '../../providers/order_provider.dart';
+import '../../providers/user_provider.dart';
 import '../../theme/app_theme.dart';
 
 class OrderDetailScreen extends StatefulWidget {
@@ -48,6 +49,48 @@ class _OrderDetailScreenState extends State<OrderDetailScreen> {
       case 'Đã giao': return Colors.green;
       case 'Đã hủy': return Colors.red;
       default: return Colors.grey;
+    }
+  }
+
+  Future<void> _cancelOrder() async {
+    final confirm = await showDialog<bool>(
+      context: context,
+      builder: (ctx) => AlertDialog(
+        title: const Text('Xác nhận'),
+        content: const Text('Bạn có chắc muốn hủy đơn hàng này không?'),
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(ctx, false),
+            child: const Text('Không', style: TextStyle(color: Colors.grey)),
+          ),
+          ElevatedButton(
+            onPressed: () => Navigator.pop(ctx, true),
+            style: ElevatedButton.styleFrom(
+              backgroundColor: Colors.red,
+              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
+            ),
+            child: const Text('Hủy đơn', style: TextStyle(color: Colors.white)),
+          ),
+        ],
+      ),
+    );
+
+    if (confirm == true) {
+      final user = Provider.of<UserProvider>(context, listen: false).user;
+      if (user != null) {
+        try {
+          await Provider.of<OrderProvider>(context, listen: false).cancelOrder(widget.orderId, user.realId);
+          if (mounted) {
+            ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('Đã hủy đơn hàng thành công')));
+            _loadData();
+          }
+        } catch (e) {
+          if (mounted) {
+            ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(e.toString())));
+          }
+        }
+      }
     }
   }
 
@@ -249,6 +292,24 @@ class _OrderDetailScreenState extends State<OrderDetailScreen> {
                       ],
                     ),
                   ),
+
+                  if (_order!.trangThaiDonHang == 'Chờ xác nhận') ...[
+                    const SizedBox(height: 20),
+                    SizedBox(
+                      width: double.infinity,
+                      child: OutlinedButton(
+                        onPressed: _cancelOrder,
+                        style: OutlinedButton.styleFrom(
+                          foregroundColor: Colors.red,
+                          side: BorderSide(color: Colors.red.withOpacity(0.5)),
+                          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+                          padding: const EdgeInsets.symmetric(vertical: 14),
+                        ),
+                        child: const Text('Hủy đơn hàng', style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold)),
+                      ),
+                    ),
+                  ],
+
                   const SizedBox(height: 40),
                 ],
               ),

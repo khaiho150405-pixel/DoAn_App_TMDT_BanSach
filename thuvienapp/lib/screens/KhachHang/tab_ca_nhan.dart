@@ -27,7 +27,7 @@ class TabCaNhan extends StatelessWidget {
           // Avatar lớn
           CircleAvatar(
             radius: 50,
-            backgroundColor: Colors.deepOrange,
+            backgroundColor: AppColors.primaryBlue,
             child: Text(
               _getAvatarLetter(user!.fullName),
               style: const TextStyle(fontSize: 36, color: Colors.white, fontWeight: FontWeight.bold),
@@ -42,11 +42,11 @@ class TabCaNhan extends StatelessWidget {
           Container(
             padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 4),
             decoration: BoxDecoration(
-              color: Colors.deepOrange.withOpacity(0.1),
+              color: AppColors.primaryBlue.withOpacity(0.1),
               borderRadius: BorderRadius.circular(12),
             ),
             child: Text(user!.roleName ?? 'Khách hàng',
-                style: const TextStyle(color: Colors.deepOrange, fontSize: 13)),
+                style: const TextStyle(color: AppColors.primaryBlue, fontSize: 13)),
           ),
           const SizedBox(height: 30),
 
@@ -110,7 +110,7 @@ class TabCaNhan extends StatelessWidget {
         boxShadow: [BoxShadow(color: Colors.black.withOpacity(0.03), blurRadius: 4)],
       ),
       child: ListTile(
-        leading: Icon(icon, color: Colors.deepOrange),
+        leading: Icon(icon, color: AppColors.primaryBlue),
         title: Text(title, style: const TextStyle(fontSize: 15)),
         trailing: const Icon(Icons.chevron_right, color: Colors.grey),
         onTap: onTap,

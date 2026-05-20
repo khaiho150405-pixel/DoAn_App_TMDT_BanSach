@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import '../../providers/api_service.dart';
+import '../../theme/app_theme.dart';
 
 /// Màn hình Thông Báo - Hiển thị sách mới, khuyến mãi, tin tức
 class NotificationScreen extends StatefulWidget {
@@ -23,7 +24,7 @@ class _NotificationScreenState extends State<NotificationScreen> {
     return Scaffold(
       appBar: AppBar(
         title: const Text('Thông báo', style: TextStyle(fontWeight: FontWeight.bold)),
-        backgroundColor: Colors.deepOrange,
+        backgroundColor: AppColors.primaryBlue,
         foregroundColor: Colors.white,
         elevation: 0,
       ),
@@ -31,7 +32,7 @@ class _NotificationScreenState extends State<NotificationScreen> {
         future: _futureNotifications,
         builder: (context, snapshot) {
           if (snapshot.connectionState == ConnectionState.waiting) {
-            return const Center(child: CircularProgressIndicator(color: Colors.deepOrange));
+            return const Center(child: CircularProgressIndicator(color: AppColors.primaryBlue));
           }
           if (snapshot.hasError) {
             return Center(
@@ -75,10 +76,10 @@ class _NotificationScreenState extends State<NotificationScreen> {
                     Container(
                       width: 44, height: 44,
                       decoration: BoxDecoration(
-                        color: Colors.deepOrange.withOpacity(0.1),
+                        color: AppColors.primaryBlue.withOpacity(0.1),
                         borderRadius: BorderRadius.circular(12),
                       ),
-                      child: const Icon(Icons.auto_stories, color: Colors.deepOrange, size: 22),
+                      child: const Icon(Icons.auto_stories, color: AppColors.primaryBlue, size: 22),
                     ),
                     const SizedBox(width: 12),
                     Expanded(

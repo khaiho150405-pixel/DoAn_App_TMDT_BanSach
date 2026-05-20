@@ -15,7 +15,6 @@ class Sach {
   final String? moTa;           // Mô tả sách
   final String? nhaCungCap;     // Nhà cung cấp
   final String? loaiBia;        // Loại bìa (Bìa mềm, Bìa cứng...)
-  final int? soLuongDaBan;      // Số lượng đã bán
   final int? soLuongTonKho;     // Số lượng tồn kho
   final double? danhGiaSao;     // Đánh giá sao trung bình (1-5)
   final int? soLuongDanhGia;    // Số lượng đánh giá
@@ -35,7 +34,6 @@ class Sach {
     this.moTa,
     this.nhaCungCap,
     this.loaiBia,
-    this.soLuongDaBan,
     this.soLuongTonKho,
     this.danhGiaSao,
     this.soLuongDanhGia,
@@ -63,7 +61,6 @@ class Sach {
       moTa: json['moTa'],
       nhaCungCap: json['nhaCungCap'],
       loaiBia: json['loaiBia'],
-      soLuongDaBan: json['soLuongDaBan'],
       soLuongTonKho: json['soLuongTonKho'],
       danhGiaSao: (json['danhGiaSao'] ?? 0).toDouble(),
       soLuongDanhGia: json['soLuongDanhGia'],

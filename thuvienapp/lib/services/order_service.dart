@@ -83,4 +83,22 @@ class OrderService {
       throw Exception('Không thể kết nối đến máy chủ: $e');
     }
   }
+
+  Future<bool> cancelOrder(int orderId) async {
+    try {
+      final response = await http.put(
+        Uri.parse('$_baseUrl/cancel/$orderId'),
+      ).timeout(const Duration(seconds: 15));
+
+      final data = json.decode(response.body);
+
+      if (response.statusCode == 200 && data['success'] == true) {
+        return true;
+      } else {
+        throw Exception(data['message'] ?? 'Lỗi khi hủy đơn hàng');
+      }
+    } catch (e) {
+      throw Exception('Không thể kết nối đến máy chủ: $e');
+    }
+  }
 }

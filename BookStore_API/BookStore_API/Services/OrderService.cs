@@ -13,6 +13,9 @@ namespace BookStoreAPI.Services
         Task<OrderResponseDto> CreateOrderAsync(CheckoutRequestDto request);
         Task<List<OrderResponseDto>> GetOrdersByCustomerAsync(int customerId);
         Task<OrderResponseDto?> GetOrderDetailAsync(int orderId);
+        Task<bool> CancelOrderAsync(int orderId);
+        Task<List<OrderResponseDto>> GetPendingOrdersAsync();
+        Task<bool> ConfirmOrderAsync(int orderId);
     }
 
     public class OrderService : IOrderService
@@ -74,6 +77,28 @@ namespace BookStoreAPI.Services
 
             var details = await _repository.GetOrderDetailsAsync(orderId);
             return MapToDto(order, details);
+        }
+
+        public async Task<bool> CancelOrderAsync(int orderId)
+        {
+            return await _repository.CancelOrderAsync(orderId);
+        }
+
+        public async Task<List<OrderResponseDto>> GetPendingOrdersAsync()
+        {
+            var orders = await _repository.GetPendingOrdersAsync();
+            var result = new List<OrderResponseDto>();
+            foreach (var order in orders)
+            {
+                var details = await _repository.GetOrderDetailsAsync(order.Madh);
+                result.Add(MapToDto(order, details));
+            }
+            return result;
+        }
+
+        public async Task<bool> ConfirmOrderAsync(int orderId)
+        {
+            return await _repository.ConfirmOrderAsync(orderId);
         }
 
         private OrderResponseDto MapToDto(Donhang order, List<Chitietdonhang> details)

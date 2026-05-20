@@ -30,6 +30,69 @@ class ApiService {
     }
   }
 
+  // Lọc Sách Nâng Cao
+  Future<List<Sach>> filterBooks({
+    String? author,
+    String? publisher,
+    double? minPrice,
+    double? maxPrice,
+  }) async {
+    try {
+      String query = '';
+      if (author != null && author.trim().isNotEmpty) query += 'author=${Uri.encodeComponent(author.trim())}&';
+      if (publisher != null && publisher.trim().isNotEmpty) query += 'publisher=${Uri.encodeComponent(publisher.trim())}&';
+      if (minPrice != null) query += 'minPrice=$minPrice&';
+      if (maxPrice != null) query += 'maxPrice=$maxPrice&';
+
+      if (query.endsWith('&')) {
+        query = query.substring(0, query.length - 1);
+      }
+
+      final url = query.isEmpty ? '$baseUrl/Sach/filter' : '$baseUrl/Sach/filter?$query';
+      final response = await http.get(Uri.parse(url));
+
+      if (response.statusCode == 200) {
+        List jsonResponse = json.decode(response.body);
+        return jsonResponse.map((data) => Sach.fromJson(data)).toList();
+      } else {
+        throw Exception('Lỗi gọi API filter: ${response.statusCode}');
+      }
+    } catch (e) {
+      print('Lỗi kết nối Server khi filter: $e');
+      return [];
+    }
+  }
+
+  // Lấy danh sách Tác giả
+  Future<List<String>> fetchAuthors() async {
+    try {
+      final response = await http.get(Uri.parse('$baseUrl/Sach/authors'));
+      if (response.statusCode == 200) {
+        List jsonResponse = json.decode(response.body);
+        return jsonResponse.cast<String>();
+      }
+      return [];
+    } catch (e) {
+      print('Lỗi fetchAuthors: $e');
+      return [];
+    }
+  }
+
+  // Lấy danh sách Nhà xuất bản
+  Future<List<String>> fetchPublishers() async {
+    try {
+      final response = await http.get(Uri.parse('$baseUrl/Sach/publishers'));
+      if (response.statusCode == 200) {
+        List jsonResponse = json.decode(response.body);
+        return jsonResponse.cast<String>();
+      }
+      return [];
+    } catch (e) {
+      print('Lỗi fetchPublishers: $e');
+      return [];
+    }
+  }
+
   // ======================================================================
   //                       ĐƠN HÀNG (Dùng cho NVSale)
   // ======================================================================
@@ -79,6 +142,19 @@ class ApiService {
     } catch (e) {
       print('Lỗi updateOrderStatus: $e');
       return {'message': 'Lỗi kết nối server!'};
+    }
+  }
+
+  // Khách hàng Hủy Đơn Hàng
+  Future<Map<String, dynamic>> cancelOrder(int maDH) async {
+    try {
+      final response = await http.put(
+        Uri.parse('$baseUrl/Order/cancel/$maDH'),
+      );
+      return json.decode(response.body);
+    } catch (e) {
+      print('Lỗi cancelOrder: $e');
+      return {'success': false, 'message': 'Lỗi kết nối server!'};
     }
   }
 

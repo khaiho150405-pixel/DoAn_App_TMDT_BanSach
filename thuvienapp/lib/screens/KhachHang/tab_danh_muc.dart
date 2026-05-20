@@ -1,8 +1,11 @@
 import 'package:flutter/material.dart';
 import '../../models/user.dart';
 import '../../models/sach.dart';
+import '../../models/filter_model.dart';
 import '../../providers/api_service.dart';
 import 'book_detail_screen.dart';
+import 'filter_bottom_sheet.dart';
+import '../../theme/app_theme.dart';
 
 /// Tab Danh Mục - Hiển thị sách theo thể loại
 class TabDanhMuc extends StatefulWidget {
@@ -16,11 +19,41 @@ class TabDanhMuc extends StatefulWidget {
 class _TabDanhMucState extends State<TabDanhMuc> {
   late Future<List<Sach>> _futureBooks;
   String? _selectedCategory;
+  BookFilterModel _currentFilter = BookFilterModel();
 
   @override
   void initState() {
     super.initState();
-    _futureBooks = ApiService().fetchBooks();
+    _loadBooks();
+  }
+
+  void _loadBooks() {
+    setState(() {
+      if (_currentFilter.hasFilter) {
+        _futureBooks = ApiService().filterBooks(
+          author: _currentFilter.author,
+          publisher: _currentFilter.publisher,
+          minPrice: _currentFilter.minPrice,
+          maxPrice: _currentFilter.maxPrice,
+        );
+      } else {
+        _futureBooks = ApiService().fetchBooks();
+      }
+    });
+  }
+
+  void _openFilterSheet() async {
+    final result = await showModalBottomSheet<BookFilterModel>(
+      context: context,
+      isScrollControlled: true,
+      backgroundColor: Colors.transparent,
+      builder: (context) => FilterBottomSheet(currentFilter: _currentFilter),
+    );
+
+    if (result != null) {
+      _currentFilter = result;
+      _loadBooks();
+    }
   }
 
   @override
@@ -29,7 +62,7 @@ class _TabDanhMucState extends State<TabDanhMuc> {
       future: _futureBooks,
       builder: (context, snapshot) {
         if (snapshot.connectionState == ConnectionState.waiting) {
-          return const Center(child: CircularProgressIndicator(color: Colors.deepOrange));
+          return const Center(child: CircularProgressIndicator(color: AppColors.primaryBlue));
         }
         if (snapshot.hasError) {
           return Center(child: Text('Lỗi: ${snapshot.error}'));
@@ -80,19 +113,46 @@ class _TabDanhMucState extends State<TabDanhMuc> {
                   const Spacer(),
                   Text('${filteredBooks.length} cuốn',
                       style: const TextStyle(color: Colors.grey, fontSize: 13)),
+                  const SizedBox(width: 8),
+                  InkWell(
+                    onTap: _openFilterSheet,
+                    child: Container(
+                      padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
+                      decoration: BoxDecoration(
+                        color: _currentFilter.hasFilter ? AppColors.primaryBlue : Colors.white,
+                        border: Border.all(color: AppColors.primaryBlue),
+                        borderRadius: BorderRadius.circular(20),
+                      ),
+                      child: Row(
+                        children: [
+                          Icon(Icons.filter_alt_outlined, size: 16, color: _currentFilter.hasFilter ? Colors.white : AppColors.primaryBlue),
+                          const SizedBox(width: 4),
+                          Text('Lọc', style: TextStyle(fontSize: 13, fontWeight: FontWeight.bold, color: _currentFilter.hasFilter ? Colors.white : AppColors.primaryBlue)),
+                        ],
+                      ),
+                    ),
+                  )
                 ],
               ),
             ),
             Expanded(
               child: filteredBooks.isEmpty
                   ? const Center(child: Text('Không có sách trong danh mục này'))
-                  : ListView.builder(
-                      padding: const EdgeInsets.all(12),
-                      itemCount: filteredBooks.length,
-                      itemBuilder: (context, index) => GestureDetector(
-                        onTap: () => Navigator.push(context, MaterialPageRoute(
-                          builder: (_) => BookDetailScreen(sach: filteredBooks[index], user: widget.user))),
-                        child: _buildBookTile(filteredBooks[index]),
+                  : RefreshIndicator(
+                      color: AppColors.primaryBlue,
+                      onRefresh: () async {
+                        _loadBooks();
+                        await _futureBooks;
+                      },
+                      child: ListView.builder(
+                        physics: const AlwaysScrollableScrollPhysics(),
+                        padding: const EdgeInsets.all(12),
+                        itemCount: filteredBooks.length,
+                        itemBuilder: (context, index) => GestureDetector(
+                          onTap: () => Navigator.push(context, MaterialPageRoute(
+                            builder: (_) => BookDetailScreen(sach: filteredBooks[index], user: widget.user))),
+                          child: _buildBookTile(filteredBooks[index]),
+                        ),
                       ),
                     ),
             ),
@@ -105,15 +165,30 @@ class _TabDanhMucState extends State<TabDanhMuc> {
   Widget _buildChip(String label, bool selected, VoidCallback onTap) {
     return Padding(
       padding: const EdgeInsets.only(right: 8),
-      child: ChoiceChip(
-        label: Text(label),
-        selected: selected,
-        selectedColor: Colors.deepOrange,
-        labelStyle: TextStyle(
-          color: selected ? Colors.white : Colors.black87,
-          fontWeight: FontWeight.w500,
+      child: GestureDetector(
+        onTap: onTap,
+        child: AnimatedContainer(
+          duration: const Duration(milliseconds: 200),
+          padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+          decoration: BoxDecoration(
+            color: selected ? AppColors.primaryBlue : Colors.white,
+            borderRadius: BorderRadius.circular(20),
+            border: Border.all(
+              color: AppColors.primaryBlue,
+              width: 1.5,
+            ),
+          ),
+          child: Center(
+            child: Text(
+              label,
+              style: TextStyle(
+                color: selected ? Colors.white : AppColors.primaryBlue,
+                fontWeight: FontWeight.w600,
+                fontSize: 14,
+              ),
+            ),
+          ),
         ),
-        onSelected: (_) => onTap(),
       ),
     );
   }
@@ -163,7 +238,7 @@ class _TabDanhMucState extends State<TabDanhMuc> {
                         style: const TextStyle(fontSize: 15, color: Colors.red, fontWeight: FontWeight.bold)),
                   ] else
                     Text('${sach.giaGoc.toStringAsFixed(0)} đ',
-                        style: const TextStyle(fontSize: 15, color: Colors.deepOrange, fontWeight: FontWeight.bold)),
+                        style: const TextStyle(fontSize: 15, color: AppColors.primaryBlue, fontWeight: FontWeight.bold)),
                 ],
               ),
             ),

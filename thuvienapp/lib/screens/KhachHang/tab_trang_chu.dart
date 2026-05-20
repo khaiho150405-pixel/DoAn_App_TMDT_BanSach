@@ -3,6 +3,7 @@ import '../../models/user.dart';
 import '../../models/sach.dart';
 import '../../providers/api_service.dart';
 import 'book_detail_screen.dart';
+import '../../theme/app_theme.dart';
 
 /// Tab Trang Chủ - Hiển thị danh sách sách nổi bật, sách mới, khuyến mãi
 class TabTrangChu extends StatefulWidget {
@@ -32,14 +33,14 @@ class _TabTrangChuState extends State<TabTrangChu> {
   Widget build(BuildContext context) {
     return RefreshIndicator(
       onRefresh: _refreshBooks,
-      color: Colors.deepOrange,
+      color: AppColors.primaryBlue,
       child: FutureBuilder<List<Sach>>(
         future: _futureBooks,
         builder: (context, snapshot) {
           // Trạng thái: Đang tải
           if (snapshot.connectionState == ConnectionState.waiting) {
             return const Center(
-              child: CircularProgressIndicator(color: Colors.deepOrange),
+              child: CircularProgressIndicator(color: AppColors.primaryBlue),
             );
           }
           // Trạng thái: Lỗi
@@ -64,7 +65,7 @@ class _TabTrangChuState extends State<TabTrangChu> {
                     icon: const Icon(Icons.refresh),
                     label: const Text('Thử lại'),
                     style: ElevatedButton.styleFrom(
-                        backgroundColor: Colors.deepOrange,
+                        backgroundColor: AppColors.primaryBlue,
                         foregroundColor: Colors.white),
                   ),
                 ],
@@ -152,26 +153,22 @@ class _TabTrangChuState extends State<TabTrangChu> {
     );
   }
 
-  /// Banner quảng cáo trên đầu trang
   Widget _buildBanner() {
     return Container(
       width: double.infinity,
       margin: const EdgeInsets.all(12),
       padding: const EdgeInsets.all(20),
       decoration: BoxDecoration(
-        gradient: const LinearGradient(
-          colors: [Color(0xFFFF6B35), Color(0xFFFF8F61)],
-          begin: Alignment.topLeft,
-          end: Alignment.bottomRight,
-        ),
+        color: Colors.white,
         borderRadius: BorderRadius.circular(16),
         boxShadow: [
           BoxShadow(
-            color: Colors.deepOrange.withOpacity(0.3),
+            color: AppColors.primaryBlue.withOpacity(0.1),
             blurRadius: 10,
             offset: const Offset(0, 4),
           ),
         ],
+        border: Border.all(color: AppColors.primaryBlue.withOpacity(0.2)),
       ),
       child: Row(
         children: [
@@ -182,9 +179,10 @@ class _TabTrangChuState extends State<TabTrangChu> {
                 const Text(
                   'Chào mừng đến\nE-BookStore! 📖',
                   style: TextStyle(
-                    color: Colors.white,
-                    fontSize: 20,
+                    color: AppColors.primaryBlue,
+                    fontSize: 24,
                     fontWeight: FontWeight.bold,
+                    letterSpacing: 0.5,
                     height: 1.3,
                   ),
                 ),
@@ -192,14 +190,14 @@ class _TabTrangChuState extends State<TabTrangChu> {
                 Text(
                   'Khám phá hàng ngàn đầu sách\nvới ưu đãi hấp dẫn',
                   style: TextStyle(
-                    color: Colors.white.withOpacity(0.9),
-                    fontSize: 13,
+                    color: Colors.grey[700],
+                    fontSize: 14,
                   ),
                 ),
               ],
             ),
           ),
-          const Icon(Icons.auto_stories, size: 60, color: Colors.white70),
+          Icon(Icons.auto_stories, size: 60, color: AppColors.primaryBlue.withOpacity(0.8)),
         ],
       ),
     );
@@ -211,7 +209,7 @@ class _TabTrangChuState extends State<TabTrangChu> {
       padding: const EdgeInsets.fromLTRB(16, 16, 16, 8),
       child: Row(
         children: [
-          Icon(icon, color: Colors.deepOrange, size: 22),
+          Icon(icon, color: AppColors.primaryBlue, size: 22),
           const SizedBox(width: 8),
           Text(
             title,
@@ -332,7 +330,7 @@ class _BookCardHorizontal extends StatelessWidget {
                       '${_formatPrice(sach.giaGoc)} đ',
                       style: const TextStyle(
                           fontSize: 14,
-                          color: Colors.deepOrange,
+                          color: AppColors.primaryBlue,
                           fontWeight: FontWeight.bold),
                     ),
                   ],
@@ -454,7 +452,7 @@ class _BookCardGrid extends StatelessWidget {
                       '${_formatPrice(sach.giaGoc)} đ',
                       style: const TextStyle(
                           fontSize: 16,
-                          color: Colors.deepOrange,
+                          color: AppColors.primaryBlue,
                           fontWeight: FontWeight.bold),
                     ),
                   ],

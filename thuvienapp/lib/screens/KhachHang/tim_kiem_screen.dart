@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import '../../models/sach.dart';
 import '../../providers/api_service.dart';
 import 'book_detail_screen.dart';
+import '../../theme/app_theme.dart';
 
 /// Màn hình Tìm Kiếm Sách
 class TimKiemScreen extends StatefulWidget {
@@ -97,7 +98,7 @@ class _TimKiemScreenState extends State<TimKiemScreen> {
         ],
       ),
       body: _isLoading
-          ? const Center(child: CircularProgressIndicator(color: Colors.deepOrange))
+          ? const Center(child: CircularProgressIndicator(color: AppColors.primaryBlue))
           : _filteredBooks.isEmpty
               ? Center(
                   child: Column(
