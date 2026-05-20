@@ -2,12 +2,13 @@ import 'package:flutter/material.dart';
 import 'package:flutter_dotenv/flutter_dotenv.dart';
 import 'package:provider/provider.dart';
 
+import 'providers/admin_user_provider.dart';
 import 'providers/cart_provider.dart';
 import 'providers/dashboard_provider.dart';
-import 'providers/user_provider.dart';
-import 'providers/admin_user_provider.dart';
 import 'providers/promotion_provider.dart';
+import 'providers/user_provider.dart';
 import 'screens/admin/admin_main_screen.dart';
+import 'screens/login_screen.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
@@ -16,7 +17,8 @@ void main() async {
     await dotenv.load(fileName: '.env');
   } catch (e) {
     debugPrint(
-        'Missing .env file. Add it at the Flutter project root if needed.');
+      'Missing .env file. Add it at the Flutter project root if needed.',
+    );
   }
 
   runApp(
@@ -50,7 +52,7 @@ class MyApp extends StatelessWidget {
           color: Colors.white,
         ),
       ),
-      home: const AdminMainScreen(),
+      home: const LoginScreen(),
       routes: {
         '/admin-dashboard': (_) => const AdminMainScreen(),
       },

@@ -114,7 +114,7 @@ namespace BookStoreAPI.Controllers
 
         // 3. NHÂN VIÊN BÁN HÀNG CHUYỂN TRẠNG THÁI ĐƠN HÀNG (QUẢN LÝ FLOW)
         [HttpPut("CapNhatTrangThaiDon/{maDH}")]
-        public async Task<IActionResult> ChangeStatus(int maDH, [FromQuery] string statusMoi, int maNV)
+        public async Task<IActionResult> ChangeStatus(int maDH, [FromQuery] string statusMoi, [FromQuery] int maNV)
         {
             var order = await _context.Donhangs.FindAsync(maDH);
             if (order == null) return NotFound("Đơn hàng không tồn tại.");
@@ -124,6 +124,57 @@ namespace BookStoreAPI.Controllers
 
             await _context.SaveChangesAsync();
             return Ok(new { message = $"Đã cập nhật trạng thái sang: {statusMoi}" });
+        }
+
+        // 4. LẤY DANH SÁCH ĐƠN HÀNG THEO TRẠNG THÁI (Dành cho tab của Sale)
+        [HttpGet("GetByStatus")]
+        public async Task<IActionResult> GetOrdersByStatus([FromQuery] string status)
+        {
+            var orders = await _context.Donhangs
+                .Where(d => d.Trangthaidonhang == status)
+                .OrderByDescending(d => d.Ngaydat) // Đơn mới nhất lên đầu
+                .Select(d => new
+                {
+                    d.Madh,
+                    d.Ngaydat,
+                    d.Tennguoinhan,
+                    d.Sdtnhan,
+                    d.Diachigiao,
+                    d.Tongtien,
+                    d.Trangthaithanhtoan,
+                    d.Trangthaidonhang,
+                    d.Ghichu
+                })
+                .ToListAsync();
+
+            return Ok(orders);
+        }
+
+        // 5. LẤY CHI TIẾT 1 ĐƠN HÀNG (Để Sale xem khách mua những sách gì trước khi đóng gói)
+        [HttpGet("ChiTiet/{maDH}")]
+        public async Task<IActionResult> GetOrderDetail(int maDH)
+        {
+            var order = await _context.Donhangs.FindAsync(maDH);
+            if (order == null) return NotFound("Không tìm thấy đơn hàng");
+
+            var details = await _context.Chitietdonhangs
+                .Where(c => c.Madh == maDH)
+                .Include(c => c.MasachNavigation)
+                .Select(c => new
+                {
+                    c.Masach,
+                    TenSach = c.MasachNavigation.Tensach,
+                    HinhAnh = c.MasachNavigation.Hinhanh,
+                    c.Soluong,
+                    c.Dongia,
+                    ThanhTien = c.Soluong * c.Dongia
+                }).ToListAsync();
+
+            return Ok(new
+            {
+                thongTinChung = order,
+                danhSachSanPham = details
+            });
         }
     }
 
