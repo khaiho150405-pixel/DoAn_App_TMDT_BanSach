@@ -113,8 +113,8 @@ class _PromotionManagementScreenState extends State<PromotionManagementScreen> {
                           ),
                         )
                       else
-                        ...list.map(
-                            (promo) => _PromotionCard(promotion: promo)),
+                        ...list
+                            .map((promo) => _PromotionCard(promotion: promo)),
                     ],
                   ),
                 ),

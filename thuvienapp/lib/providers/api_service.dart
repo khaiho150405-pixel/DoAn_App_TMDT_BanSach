@@ -15,62 +15,126 @@ class ApiService {
   Future<List<Sach>> fetchBooks() async {
     try {
       final response = await http.get(Uri.parse('$baseUrl/Sach'));
+      if (response.statusCode == 200) {
+        final List jsonResponse = json.decode(response.body);
+        return jsonResponse.map((data) => Sach.fromJson(data)).toList();
+      }
+      throw Exception('API error: ${response.statusCode}');
+    } catch (e) {
+      debugPrint('fetchBooks error: $e');
+      return [];
+    }
+  }
+
+  Future<List<Sach>> filterBooks({
+    String? author,
+    String? publisher,
+    double? minPrice,
+    double? maxPrice,
+  }) async {
+    try {
+      final params = <String, String>{};
+      if (author != null && author.trim().isNotEmpty) {
+        params['author'] = author.trim();
+      }
+      if (publisher != null && publisher.trim().isNotEmpty) {
+        params['publisher'] = publisher.trim();
+      }
+      if (minPrice != null) params['minPrice'] = minPrice.toString();
+      if (maxPrice != null) params['maxPrice'] = maxPrice.toString();
+
+      final uri = Uri.parse('$baseUrl/Sach/filter').replace(
+        queryParameters: params.isEmpty ? null : params,
+      );
+      final response = await http.get(uri);
 
       if (response.statusCode == 200) {
         final List jsonResponse = json.decode(response.body);
         return jsonResponse.map((data) => Sach.fromJson(data)).toList();
       }
-
-      throw Exception('API error: ${response.statusCode}');
+      throw Exception('Filter API error: ${response.statusCode}');
     } catch (e) {
-      debugPrint('Server connection error: $e');
+      debugPrint('filterBooks error: $e');
       return [];
+    }
+  }
+
+  Future<List<String>> fetchAuthors() async {
+    try {
+      final response = await http.get(Uri.parse('$baseUrl/Sach/authors'));
+      if (response.statusCode == 200) {
+        final List jsonResponse = json.decode(response.body);
+        return jsonResponse.cast<String>();
+      }
+      return [];
+    } catch (e) {
+      debugPrint('fetchAuthors error: $e');
+      return [];
+    }
+  }
+
+  Future<List<String>> fetchPublishers() async {
+    try {
+      final response = await http.get(Uri.parse('$baseUrl/Sach/publishers'));
+      if (response.statusCode == 200) {
+        final List jsonResponse = json.decode(response.body);
+        return jsonResponse.cast<String>();
+      }
+      return [];
+    } catch (e) {
+      debugPrint('fetchPublishers error: $e');
+      return [];
+    }
+  }
+
+  Future<Sach?> fetchBookDetail(int maSach) async {
+    try {
+      final response = await http.get(Uri.parse('$baseUrl/Sach/$maSach'));
+      if (response.statusCode == 200) {
+        return Sach.fromJson(json.decode(response.body));
+      }
+      return null;
+    } catch (e) {
+      debugPrint('fetchBookDetail error: $e');
+      return null;
     }
   }
 
   Future<DashboardSummary> fetchDashboardSummary() async {
     final response = await http.get(Uri.parse('$baseUrl/dashboard/summary'));
-
     if (response.statusCode == 200) {
       return DashboardSummary.fromJson(json.decode(response.body));
     }
-
     throw Exception('Dashboard summary API error: ${response.statusCode}');
   }
 
   Future<List<RecentOrder>> fetchRecentOrders() async {
     final response = await http.get(Uri.parse('$baseUrl/orders/recent'));
-
     if (response.statusCode == 200) {
       final List jsonResponse = json.decode(response.body);
       return jsonResponse.map((data) => RecentOrder.fromJson(data)).toList();
     }
-
     throw Exception('Recent orders API error: ${response.statusCode}');
   }
 
   Future<List<RevenueChartPoint>> fetchRevenueChart() async {
     final response =
         await http.get(Uri.parse('$baseUrl/dashboard/revenue-chart'));
-
     if (response.statusCode == 200) {
       final List jsonResponse = json.decode(response.body);
       return jsonResponse
           .map((data) => RevenueChartPoint.fromJson(data))
           .toList();
     }
-
     throw Exception('Revenue chart API error: ${response.statusCode}');
   }
 
   Future<List<AdminUser>> fetchAdminUsers() async {
     final response = await http.get(Uri.parse('$baseUrl/users'));
-
     if (response.statusCode == 200) {
       final List jsonResponse = json.decode(response.body);
       return jsonResponse.map((data) => AdminUser.fromJson(data)).toList();
     }
-
     throw Exception('Failed to load users: ${response.statusCode}');
   }
 
@@ -80,48 +144,26 @@ class ApiService {
       headers: {'Content-Type': 'application/json'},
       body: json.encode(userData),
     );
-
     if (response.statusCode != 200) {
-      try {
-        final error = json.decode(response.body);
-        throw Exception(error['message'] ?? 'Them nhan vien that bai');
-      } catch (e) {
-        if (e is FormatException) {
-          throw Exception('Them nhan vien that bai: ${response.statusCode}');
-        }
-        rethrow;
-      }
+      final error = _tryDecodeMap(response.body);
+      throw Exception(error['message'] ?? 'Them nhan vien that bai');
     }
   }
 
   Future<void> toggleUserStatus(int userId) async {
-    final response = await http.put(
-      Uri.parse('$baseUrl/users/$userId/status'),
-    );
-
+    final response = await http.put(Uri.parse('$baseUrl/users/$userId/status'));
     if (response.statusCode != 200) {
-      try {
-        final error = json.decode(response.body);
-        throw Exception(error['message'] ?? 'Cap nhat trang thai that bai');
-      } catch (e) {
-        if (e is FormatException) {
-          throw Exception(
-            'Cap nhat trang thai that bai: ${response.statusCode}',
-          );
-        }
-        rethrow;
-      }
+      final error = _tryDecodeMap(response.body);
+      throw Exception(error['message'] ?? 'Cap nhat trang thai that bai');
     }
   }
 
   Future<List<Promotion>> fetchPromotions() async {
     final response = await http.get(Uri.parse('$baseUrl/promotions'));
-
     if (response.statusCode == 200) {
       final List jsonResponse = json.decode(response.body);
       return jsonResponse.map((data) => Promotion.fromJson(data)).toList();
     }
-
     throw Exception('Failed to load promotions: ${response.statusCode}');
   }
 
@@ -131,17 +173,9 @@ class ApiService {
       headers: {'Content-Type': 'application/json'},
       body: json.encode(data),
     );
-
     if (response.statusCode != 200) {
-      try {
-        final error = json.decode(response.body);
-        throw Exception(error['message'] ?? 'Tao khuyen mai that bai');
-      } catch (e) {
-        if (e is FormatException) {
-          throw Exception('Tao khuyen mai that bai: ${response.statusCode}');
-        }
-        rethrow;
-      }
+      final error = _tryDecodeMap(response.body);
+      throw Exception(error['message'] ?? 'Tao khuyen mai that bai');
     }
   }
 
@@ -159,21 +193,18 @@ class ApiService {
         'matKhauMoi': newPw,
       }),
     );
-
     if (response.statusCode != 200) {
-      final error = json.decode(response.body);
+      final error = _tryDecodeMap(response.body);
       throw Exception(error['message'] ?? 'Doi mat khau that bai');
     }
   }
 
   Future<List<Map<String, dynamic>>> fetchLogs() async {
     final response = await http.get(Uri.parse('$baseUrl/auth/Logs'));
-
     if (response.statusCode == 200) {
       final List jsonResponse = json.decode(response.body);
       return jsonResponse.cast<Map<String, dynamic>>();
     }
-
     throw Exception('Failed to load logs: ${response.statusCode}');
   }
 
@@ -184,12 +215,10 @@ class ApiService {
           '$baseUrl/DonHang/GetByStatus?status=${Uri.encodeComponent(status)}',
         ),
       );
-
       if (response.statusCode == 200) {
         final List jsonResponse = json.decode(response.body);
         return jsonResponse.cast<Map<String, dynamic>>();
       }
-
       throw Exception('API error: ${response.statusCode}');
     } catch (e) {
       debugPrint('fetchOrdersByStatus error: $e');
@@ -202,11 +231,9 @@ class ApiService {
       final response = await http.get(
         Uri.parse('$baseUrl/DonHang/ChiTiet/$maDH'),
       );
-
       if (response.statusCode == 200) {
         return json.decode(response.body) as Map<String, dynamic>;
       }
-
       throw Exception('API error: ${response.statusCode}');
     } catch (e) {
       debugPrint('fetchOrderDetail error: $e');
@@ -226,11 +253,20 @@ class ApiService {
           '?statusMoi=${Uri.encodeComponent(statusMoi)}&maNV=$maNV',
         ),
       );
-
-      return json.decode(response.body) as Map<String, dynamic>;
+      return _tryDecodeMap(response.body);
     } catch (e) {
       debugPrint('updateOrderStatus error: $e');
       return {'message': 'Loi ket noi server!'};
+    }
+  }
+
+  Future<Map<String, dynamic>> cancelOrder(int maDH) async {
+    try {
+      final response = await http.put(Uri.parse('$baseUrl/Order/cancel/$maDH'));
+      return _tryDecodeMap(response.body);
+    } catch (e) {
+      debugPrint('cancelOrder error: $e');
+      return {'success': false, 'message': 'Loi ket noi server!'};
     }
   }
 
@@ -255,7 +291,7 @@ class ApiService {
           'diaChiMacDinh': diaChiMacDinh,
         }),
       );
-      final data = json.decode(response.body) as Map<String, dynamic>;
+      final data = _tryDecodeMap(response.body);
       return {'success': response.statusCode == 200, ...data};
     } catch (e) {
       debugPrint('registerAccount error: $e');
@@ -266,12 +302,10 @@ class ApiService {
   Future<List<Map<String, dynamic>>> fetchPendingQuestions() async {
     try {
       final response = await http.get(Uri.parse('$baseUrl/HoiDap/ChuaTraLoi'));
-
       if (response.statusCode == 200) {
         final List jsonResponse = json.decode(response.body);
         return jsonResponse.cast<Map<String, dynamic>>();
       }
-
       throw Exception('API error: ${response.statusCode}');
     } catch (e) {
       debugPrint('fetchPendingQuestions error: $e');
@@ -282,12 +316,10 @@ class ApiService {
   Future<List<Map<String, dynamic>>> fetchAllQuestions() async {
     try {
       final response = await http.get(Uri.parse('$baseUrl/HoiDap/TatCa'));
-
       if (response.statusCode == 200) {
         final List jsonResponse = json.decode(response.body);
         return jsonResponse.cast<Map<String, dynamic>>();
       }
-
       throw Exception('API error: ${response.statusCode}');
     } catch (e) {
       debugPrint('fetchAllQuestions error: $e');
@@ -309,7 +341,7 @@ class ApiService {
           'maNV': maNV,
         }),
       );
-      final data = json.decode(response.body) as Map<String, dynamic>;
+      final data = _tryDecodeMap(response.body);
       return {'success': response.statusCode == 200, ...data};
     } catch (e) {
       debugPrint('replyQuestion error: $e');
@@ -320,12 +352,10 @@ class ApiService {
   Future<List<Map<String, dynamic>>> fetchAllReviews() async {
     try {
       final response = await http.get(Uri.parse('$baseUrl/DanhGia/DanhSach'));
-
       if (response.statusCode == 200) {
         final List jsonResponse = json.decode(response.body);
         return jsonResponse.cast<Map<String, dynamic>>();
       }
-
       throw Exception('API error: ${response.statusCode}');
     } catch (e) {
       debugPrint('fetchAllReviews error: $e');
@@ -338,11 +368,32 @@ class ApiService {
       final response = await http.delete(
         Uri.parse('$baseUrl/DanhGia/Xoa/$maDanhGia'),
       );
-      final data = json.decode(response.body) as Map<String, dynamic>;
+      final data = _tryDecodeMap(response.body);
       return {'success': response.statusCode == 200, ...data};
     } catch (e) {
       debugPrint('deleteReview error: $e');
       return {'success': false, 'message': 'Khong the ket noi server!'};
     }
+  }
+
+  Future<List<Map<String, dynamic>>> fetchNewBooksNews() async {
+    try {
+      final response = await http.get(Uri.parse('$baseUrl/ThongBao/SachMoi'));
+      if (response.statusCode == 200) {
+        final List jsonResponse = json.decode(response.body);
+        return jsonResponse.cast<Map<String, dynamic>>();
+      }
+      return [];
+    } catch (e) {
+      debugPrint('fetchNewBooksNews error: $e');
+      return [];
+    }
+  }
+
+  Map<String, dynamic> _tryDecodeMap(String body) {
+    if (body.isEmpty) return {};
+    final decoded = json.decode(body);
+    if (decoded is Map<String, dynamic>) return decoded;
+    return {};
   }
 }

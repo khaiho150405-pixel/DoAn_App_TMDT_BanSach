@@ -1,4 +1,4 @@
-﻿using BookStore_API.Models;
+using BookStore_API.Models;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 
@@ -52,7 +52,121 @@ namespace BookStoreAPI.Controllers
             return Ok(result);
         }
 
-        // 2. NHÂN VIÊN KHO THÊM SÁCH MỚI CÓ TẢI ẢNH LÊN
+        [HttpGet("{id}")]
+        public async Task<IActionResult> GetById(int id)
+        {
+            var now = DateTime.Now;
+
+            var result = await _context.Saches
+                .Include(s => s.MatgNavigation)
+                .Include(s => s.ManxbNavigation)
+                .Include(s => s.MakmNavigation)
+                .Include(s => s.MatheloaiNavigation)
+                .Where(s => s.Masach == id)
+                .Select(s => new
+                {
+                    s.Masach,
+                    s.Tensach,
+                    s.Mota,
+                    s.Soluongton,
+                    s.Trangthai,
+                    s.Hinhanh,
+                    TenTacGia = s.MatgNavigation.Tentg,
+                    TenNxb = s.ManxbNavigation.Tennxb,
+                    GiaGoc = s.Giaban,
+                    TenTheLoai = s.MatheloaiNavigation.Tentheloai,
+                    PhanTramGiam = (s.Makm != null && s.MakmNavigation.Ngaybatdau <= now && s.MakmNavigation.Ngayketthuc >= now)
+                                   ? s.MakmNavigation.Phantramgiam : 0,
+                    GiaBanThucTe = (s.Makm != null && s.MakmNavigation.Ngaybatdau <= now && s.MakmNavigation.Ngayketthuc >= now)
+                                   ? (s.Giaban - (s.Giaban * s.MakmNavigation.Phantramgiam / 100)) : s.Giaban,
+                    TenSuKienKhuyenMai = (s.Makm != null && s.MakmNavigation.Ngaybatdau <= now && s.MakmNavigation.Ngayketthuc >= now)
+                                   ? s.MakmNavigation.Tenkm : null
+                }).FirstOrDefaultAsync();
+
+            if (result == null) return NotFound();
+
+            return Ok(result);
+        }
+
+        // 2. LỌC SÁCH NÂNG CAO
+        [HttpGet("filter")]
+        public async Task<IActionResult> FilterBooks([FromQuery] string? author, [FromQuery] string? publisher, [FromQuery] decimal? minPrice, [FromQuery] decimal? maxPrice)
+        {
+            var now = DateTime.Now;
+
+            var query = _context.Saches
+                .Include(s => s.MatgNavigation)
+                .Include(s => s.ManxbNavigation)
+                .Include(s => s.MakmNavigation)
+                .Include(s => s.MatheloaiNavigation)
+                .AsQueryable();
+
+            if (!string.IsNullOrEmpty(author))
+            {
+                query = query.Where(s => s.MatgNavigation != null && s.MatgNavigation.Tentg.Contains(author));
+            }
+
+            if (!string.IsNullOrEmpty(publisher))
+            {
+                query = query.Where(s => s.ManxbNavigation != null && s.ManxbNavigation.Tennxb.Contains(publisher));
+            }
+
+            var projected = await query.Select(s => new
+            {
+                s.Masach,
+                s.Tensach,
+                s.Mota,
+                s.Soluongton,
+                s.Trangthai,
+                s.Hinhanh,
+                TenTacGia = s.MatgNavigation.Tentg,
+                TenNxb = s.ManxbNavigation.Tennxb,
+                GiaGoc = s.Giaban,
+                TenTheLoai = s.MatheloaiNavigation.Tentheloai,
+                PhanTramGiam = (s.Makm != null && s.MakmNavigation.Ngaybatdau <= now && s.MakmNavigation.Ngayketthuc >= now)
+                               ? s.MakmNavigation.Phantramgiam : 0,
+                GiaBanThucTe = (s.Makm != null && s.MakmNavigation.Ngaybatdau <= now && s.MakmNavigation.Ngayketthuc >= now)
+                               ? (s.Giaban - (s.Giaban * s.MakmNavigation.Phantramgiam / 100)) : s.Giaban,
+                TenSuKienKhuyenMai = (s.Makm != null && s.MakmNavigation.Ngaybatdau <= now && s.MakmNavigation.Ngayketthuc >= now)
+                               ? s.MakmNavigation.Tenkm : null
+            }).ToListAsync();
+
+            if (minPrice.HasValue)
+            {
+                projected = projected.Where(s => s.GiaBanThucTe >= minPrice.Value).ToList();
+            }
+
+            if (maxPrice.HasValue)
+            {
+                projected = projected.Where(s => s.GiaBanThucTe <= maxPrice.Value).ToList();
+            }
+
+            return Ok(projected);
+        }
+
+        [HttpGet("authors")]
+        public async Task<IActionResult> GetAuthors()
+        {
+            var authors = await _context.Tacgia
+                .Select(t => t.Tentg)
+                .Distinct()
+                .OrderBy(t => t)
+                .ToListAsync();
+            return Ok(authors);
+        }
+
+        [HttpGet("publishers")]
+        public async Task<IActionResult> GetPublishers()
+        {
+            var publishers = await _context.Nhaxuatbans
+                .Select(n => n.Tennxb)
+                .Distinct()
+                .OrderBy(n => n)
+                .ToListAsync();
+            return Ok(publishers);
+        }
+
+        // 3. NHÂN VIÊN KHO THÊM SÁCH MỚI CÓ TẢI ẢNH LÊN
         [HttpPost("ThemSach")]
         public async Task<IActionResult> ThemSach([FromForm] FormSachRequest request)
         {

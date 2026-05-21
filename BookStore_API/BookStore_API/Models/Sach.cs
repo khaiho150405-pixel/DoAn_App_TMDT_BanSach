@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 
 namespace BookStore_API.Models;
@@ -22,7 +22,6 @@ public partial class Sach
     public string? Mota { get; set; }
 
     public decimal Giaban { get; set; }
-
     public int Soluongton { get; set; }
 
     public string Trangthai { get; set; } = null!;

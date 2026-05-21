@@ -5,10 +5,12 @@ import 'package:provider/provider.dart';
 import 'providers/admin_user_provider.dart';
 import 'providers/cart_provider.dart';
 import 'providers/dashboard_provider.dart';
+import 'providers/order_provider.dart';
 import 'providers/promotion_provider.dart';
 import 'providers/user_provider.dart';
 import 'screens/admin/admin_main_screen.dart';
 import 'screens/login_screen.dart';
+import 'theme/app_theme.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
@@ -26,6 +28,7 @@ void main() async {
       providers: [
         ChangeNotifierProvider(create: (_) => UserProvider()),
         ChangeNotifierProvider(create: (_) => CartProvider()),
+        ChangeNotifierProvider(create: (_) => OrderProvider()),
         ChangeNotifierProvider(create: (_) => DashboardProvider()),
         ChangeNotifierProvider(create: (_) => AdminUserProvider()),
         ChangeNotifierProvider(create: (_) => PromotionProvider()),
@@ -43,15 +46,7 @@ class MyApp extends StatelessWidget {
     return MaterialApp(
       debugShowCheckedModeBanner: false,
       title: 'E-BookStore Test',
-      theme: ThemeData(
-        primarySwatch: Colors.blue,
-        useMaterial3: true,
-        colorScheme: ColorScheme.fromSeed(seedColor: Colors.blue),
-        cardTheme: const CardThemeData(
-          surfaceTintColor: Colors.transparent,
-          color: Colors.white,
-        ),
-      ),
+      theme: AppTheme.lightTheme,
       home: const LoginScreen(),
       routes: {
         '/admin-dashboard': (_) => const AdminMainScreen(),
