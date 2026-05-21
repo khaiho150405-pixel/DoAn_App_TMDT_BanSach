@@ -6,6 +6,7 @@ import 'package:provider/provider.dart';
 import '../models/user.dart';
 import '../providers/user_provider.dart';
 import '../providers/api_service.dart';
+import '../theme/app_theme.dart';
 
 // Import các màn hình để điều hướng
 import 'NVSale/sale_home_screen.dart';
@@ -68,18 +69,18 @@ class _LoginScreenState extends State<LoginScreen> {
           switch (loggedInUser.roleId) {
             case 1:
             // nextScreen = const AdminHomeScreen(); // Chờ tạo màn hình Admin
-              nextScreen = const HomeScreen(); // Tạm thời đẩy về Home
+              nextScreen = HomeScreen(user: loggedInUser); // Tạm thời đẩy về Home
               break;
             case 2:
               nextScreen = const SaleHomeScreen(); // Vào thẳng Dashboard Sale
               break;
             case 3:
             // nextScreen = const ThuKhoHomeScreen(); // Chờ cập nhật màn hình Kho
-              nextScreen = const HomeScreen();
+              nextScreen = HomeScreen(user: loggedInUser);
               break;
             case 4:
             default:
-              nextScreen = const HomeScreen(); // Khách hàng vào trang mua sắm
+              nextScreen = HomeScreen(user: loggedInUser); // Khách hàng vào trang mua sắm
               break;
           }
 
@@ -120,89 +121,105 @@ class _LoginScreenState extends State<LoginScreen> {
         child: Center(
           child: SingleChildScrollView(
             padding: const EdgeInsets.all(24.0),
-            child: Form(
-              key: _formKey,
-              child: Column(
-                mainAxisAlignment: MainAxisAlignment.center,
-                crossAxisAlignment: CrossAxisAlignment.stretch,
-                children: [
-                  // Logo / Icon ứng dụng
-                  const Icon(Icons.book_online, size: 100, color: Colors.deepOrange),
-                  const SizedBox(height: 20),
-                  const Text(
-                    'E-BookStore',
-                    textAlign: TextAlign.center,
-                    style: TextStyle(fontSize: 28, fontWeight: FontWeight.bold, color: Colors.deepOrange),
-                  ),
-                  const SizedBox(height: 40),
-
-                  // Ô nhập Tài khoản
-                  TextFormField(
-                    controller: _usernameController,
-                    decoration: InputDecoration(
-                      labelText: 'Tên đăng nhập',
-                      prefixIcon: const Icon(Icons.person),
-                      border: OutlineInputBorder(borderRadius: BorderRadius.circular(12)),
-                    ),
-                    validator: (value) => value!.isEmpty ? 'Vui lòng nhập tên đăng nhập' : null,
-                  ),
-                  const SizedBox(height: 20),
-
-                  // Ô nhập Mật khẩu
-                  TextFormField(
-                    controller: _passwordController,
-                    obscureText: _obscurePassword,
-                    decoration: InputDecoration(
-                      labelText: 'Mật khẩu',
-                      prefixIcon: const Icon(Icons.lock),
-                      suffixIcon: IconButton(
-                        icon: Icon(_obscurePassword ? Icons.visibility : Icons.visibility_off),
-                        onPressed: () {
-                          setState(() {
-                            _obscurePassword = !_obscurePassword;
-                          });
-                        },
-                      ),
-                      border: OutlineInputBorder(borderRadius: BorderRadius.circular(12)),
-                    ),
-                    validator: (value) => value!.isEmpty ? 'Vui lòng nhập mật khẩu' : null,
-                  ),
-                  const SizedBox(height: 30),
-
-                  // Nút Đăng nhập
-                  SizedBox(
-                    height: 50,
-                    child: ElevatedButton(
-                      style: ElevatedButton.styleFrom(
-                        backgroundColor: Colors.deepOrange,
-                        foregroundColor: Colors.white,
-                        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
-                      ),
-                      onPressed: _isLoading ? null : _login,
-                      child: _isLoading
-                          ? const CircularProgressIndicator(color: Colors.white)
-                          : const Text('ĐĂNG NHẬP', style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold)),
-                    ),
-                  ),
-                  const SizedBox(height: 20),
-
-                  // Link Đăng ký (Dành cho khách hàng)
-                  Row(
-                    mainAxisAlignment: MainAxisAlignment.center,
-                    children: [
-                      const Text('Chưa có tài khoản?'),
-                      TextButton(
-                        onPressed: () {
-                          // TODO: Chuyển sang màn hình Đăng ký
-                          ScaffoldMessenger.of(context).showSnackBar(
-                            const SnackBar(content: Text('Tính năng đăng ký đang cập nhật')),
-                          );
-                        },
-                        child: const Text('Đăng ký ngay', style: TextStyle(color: Colors.deepOrange, fontWeight: FontWeight.bold)),
-                      ),
-                    ],
+            child: Container(
+              padding: const EdgeInsets.all(24.0),
+              decoration: BoxDecoration(
+                color: Colors.white,
+                borderRadius: BorderRadius.circular(20),
+                boxShadow: [
+                  BoxShadow(
+                    color: Colors.black.withOpacity(0.05),
+                    blurRadius: 15,
+                    spreadRadius: 2,
+                    offset: const Offset(0, 5),
                   ),
                 ],
+              ),
+              child: Form(
+                key: _formKey,
+                child: Column(
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  crossAxisAlignment: CrossAxisAlignment.stretch,
+                  children: [
+                    // Logo / Icon ứng dụng
+                    const Icon(Icons.book_online, size: 80, color: AppColors.primaryBlue),
+                    const SizedBox(height: 16),
+                    const Text(
+                      'E-BookStore',
+                      textAlign: TextAlign.center,
+                      style: TextStyle(fontSize: 26, fontWeight: FontWeight.bold, color: AppColors.primaryBlue),
+                    ),
+                    const SizedBox(height: 40),
+
+                    // Ô nhập Tài khoản
+                    TextFormField(
+                      controller: _usernameController,
+                      decoration: InputDecoration(
+                        labelText: 'Tên đăng nhập',
+                        prefixIcon: const Icon(Icons.person),
+                        border: OutlineInputBorder(borderRadius: BorderRadius.circular(12)),
+                      ),
+                      validator: (value) => value!.isEmpty ? 'Vui lòng nhập tên đăng nhập' : null,
+                    ),
+                    const SizedBox(height: 20),
+
+                    // Ô nhập Mật khẩu
+                    TextFormField(
+                      controller: _passwordController,
+                      obscureText: _obscurePassword,
+                      decoration: InputDecoration(
+                        labelText: 'Mật khẩu',
+                        prefixIcon: const Icon(Icons.lock),
+                        suffixIcon: IconButton(
+                          icon: Icon(_obscurePassword ? Icons.visibility : Icons.visibility_off),
+                          onPressed: () {
+                            setState(() {
+                              _obscurePassword = !_obscurePassword;
+                            });
+                          },
+                        ),
+                        border: OutlineInputBorder(borderRadius: BorderRadius.circular(12)),
+                      ),
+                      validator: (value) => value!.isEmpty ? 'Vui lòng nhập mật khẩu' : null,
+                    ),
+                    const SizedBox(height: 30),
+
+                    // Nút Đăng nhập
+                    SizedBox(
+                      height: 50,
+                      child: ElevatedButton(
+                        style: ElevatedButton.styleFrom(
+                          backgroundColor: AppColors.primaryBlue,
+                          foregroundColor: Colors.white,
+                          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+                          elevation: 0,
+                        ),
+                        onPressed: _isLoading ? null : _login,
+                        child: _isLoading
+                            ? const CircularProgressIndicator(color: Colors.white)
+                            : const Text('ĐĂNG NHẬP', style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold)),
+                      ),
+                    ),
+                    const SizedBox(height: 20),
+
+                    // Link Đăng ký (Dành cho khách hàng)
+                    Row(
+                      mainAxisAlignment: MainAxisAlignment.center,
+                      children: [
+                        const Text('Chưa có tài khoản?'),
+                        TextButton(
+                          onPressed: () {
+                            // TODO: Chuyển sang màn hình Đăng ký
+                            ScaffoldMessenger.of(context).showSnackBar(
+                              const SnackBar(content: Text('Tính năng đăng ký đang cập nhật')),
+                            );
+                          },
+                          child: const Text('Đăng ký ngay', style: TextStyle(color: AppColors.primaryBlue, fontWeight: FontWeight.bold)),
+                        ),
+                      ],
+                    ),
+                  ],
+                ),
               ),
             ),
           ),

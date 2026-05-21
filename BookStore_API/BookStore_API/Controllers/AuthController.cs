@@ -1,4 +1,4 @@
-﻿using BookStore_API.Models;
+using BookStore_API.Models;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 
@@ -81,16 +81,31 @@ namespace BookStoreAPI.Controllers
             // Kiểm tra phân quyền để lấy đúng ID thực tế của người dùng
             int userDetailId = 0;
             string hoVaTen = "Người dùng";
+            string? sdt = null;
+            string? diaChiMacDinh = null;
+            string? email = user.Email;
 
             if (user.Maquyen == 4) // Khách hàng
             {
                 var kh = await _context.Khachhangs.FirstOrDefaultAsync(k => k.Mataikhoan == user.Mataikhoan);
-                if (kh != null) { userDetailId = kh.Makh; hoVaTen = kh.Hovaten; }
+                if (kh != null) { 
+                    userDetailId = kh.Makh; 
+                    hoVaTen = kh.Hovaten; 
+                    sdt = kh.Sdt;
+                    diaChiMacDinh = kh.Diachimacdinh;
+                    if (string.IsNullOrEmpty(email)) email = kh.Email;
+                }
             }
             else // Admin hoặc các phân quyền Nhân viên khác
             {
                 var nv = await _context.Nhanviens.FirstOrDefaultAsync(n => n.Mataikhoan == user.Mataikhoan);
-                if (nv != null) { userDetailId = nv.Manv; hoVaTen = nv.Hovaten; }
+                if (nv != null) { 
+                    userDetailId = nv.Manv; 
+                    hoVaTen = nv.Hovaten; 
+                    sdt = nv.Sdt;
+                    diaChiMacDinh = null; // Nhân viên không có địa chỉ trong model
+                    if (string.IsNullOrEmpty(email)) email = nv.Email;
+                }
             }
 
             return Ok(new
@@ -101,7 +116,10 @@ namespace BookStoreAPI.Controllers
                 roleId = user.Maquyen,
                 roleName = user.MaquyenNavigation?.Tenquyen,
                 realId = userDetailId, // Cực kỳ quan trọng để Flutter dùng gọi đơn hàng / giỏ hàng
-                fullName = hoVaTen
+                fullName = hoVaTen,
+                sdt = sdt,
+                diaChiMacDinh = diaChiMacDinh,
+                email = email
             });
         }
     }

@@ -1,215 +1,326 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
+import '../../theme/app_theme.dart';
 
-import '../../models/sach.dart';
+// Import các model và provider
+import '../../models/user.dart';
 import '../../providers/api_service.dart';
 import '../../providers/cart_provider.dart';
 
+// Import các màn hình
+import '../login_screen.dart';
+import 'tab_trang_chu.dart';
+import 'tab_danh_muc.dart';
+import 'tab_ca_nhan.dart';
+import 'gio_hang_screen.dart';
+import 'tim_kiem_screen.dart';
+import 'notification_screen.dart';
+
 class HomeScreen extends StatefulWidget {
-  const HomeScreen({super.key});
+  final User? user; // Cho phép user null (Khách / Guest mode)
+  const HomeScreen({super.key, this.user});
 
   @override
-  State<HomeScreen> createState() => _HomeScreenState();
+  _HomeScreenState createState() => _HomeScreenState();
 }
 
 class _HomeScreenState extends State<HomeScreen> {
-  late Future<List<Sach>> _futureBooks;
+  // Mặc định chọn tab 0 (Trang chủ) để khách vào thấy nội dung ngay
+  int _selectedIndex = 0;
+  int _notificationCount = 0;
 
   @override
   void initState() {
     super.initState();
-    // Gọi API lấy dữ liệu ngay khi màn hình vừa khởi tạo
-    _futureBooks = ApiService().fetchBooks();
+    _fetchNotificationCount();
+  }
+
+  /// Lấy số lượng thông báo mới (sách mới, khuyến mãi...)
+  void _fetchNotificationCount() async {
+    try {
+      var newsList = await ApiService().fetchNewBooksNews();
+      if (mounted) {
+        setState(() {
+          _notificationCount = newsList.length;
+        });
+      }
+    } catch (e) {
+      print("Lỗi tải thông báo: $e");
+    }
+  }
+
+  void _onItemTapped(int index) {
+    setState(() {
+      _selectedIndex = index;
+    });
+  }
+
+  /// Lấy chữ cái đầu của tên (Nếu là khách trả về icon mặc định sau)
+  String _getAvatarLetter(String fullName) {
+    if (fullName.isEmpty) return "G"; // G = Guest
+    List<String> parts = fullName.trim().split(' ');
+    if (parts.isNotEmpty && parts.last.isNotEmpty) {
+      return parts.last[0].toUpperCase();
+    }
+    return fullName[0].toUpperCase();
+  }
+
+  /// Hàm chuyển hướng sang trang đăng nhập
+  void _navigateToLogin() {
+    Navigator.push(
+      context,
+      MaterialPageRoute(builder: (_) => const LoginScreen()),
+    );
   }
 
   @override
   Widget build(BuildContext context) {
+    final bool isGuest = widget.user == null;
+    final String avatarLabel =
+        isGuest ? "?" : _getAvatarLetter(widget.user!.fullName);
+
+    // Cấu hình danh sách các Tab
+    final List<Widget> widgetOptions = [
+      // TAB 0: Trang Chủ (Công khai - ai cũng xem được)
+      TabTrangChu(user: widget.user),
+
+      // TAB 1: Danh Mục / Sách (Công khai)
+      TabDanhMuc(user: widget.user),
+
+      // TAB 2: Cá Nhân (Đã xử lý guest bên trong TabCaNhan)
+      TabCaNhan(user: widget.user),
+    ];
+
     return Scaffold(
-      backgroundColor: Colors.grey[100], // Màu nền hơi xám cho nổi bật thẻ trắng
       appBar: AppBar(
-        title: const Text('E-BookStore', style: TextStyle(fontWeight: FontWeight.bold)),
-        backgroundColor: Colors.deepOrange,
-        foregroundColor: Colors.white,
+        backgroundColor: Colors.white,
         elevation: 0,
-        actions: [
-          // Icon Giỏ hàng có huy hiệu (Badge) số lượng
-          Consumer<CartProvider>(
-            builder: (context, cart, child) {
-              return Stack(
-                alignment: Alignment.center,
-                children: [
-                  IconButton(
-                    icon: const Icon(Icons.shopping_cart),
-                    onPressed: () {
-                      // TODO: Điều hướng sang trang Chi tiết Giỏ Hàng
-                      ScaffoldMessenger.of(context).showSnackBar(
-                        const SnackBar(content: Text('Tính năng Giỏ hàng đang xây dựng!')),
-                      );
-                    },
+        automaticallyImplyLeading: false, // Tắt nút back mặc định
+        title: Row(
+          children: [
+            // --- AVATAR KHÁCH HÀNG ---
+            GestureDetector(
+              onTap: () {
+                _onItemTapped(2); // Chuyển tab sang Tab Cá Nhân
+              },
+              child: Container(
+                width: 40,
+                height: 40,
+                decoration: BoxDecoration(
+                  shape: BoxShape.circle,
+                  border: Border.all(
+                      color: AppColors.primaryBlue.withOpacity(0.5), width: 2),
+                ),
+                child: CircleAvatar(
+                  backgroundColor:
+                      isGuest ? Colors.grey : AppColors.primaryBlue,
+                  child: isGuest
+                      ? const Icon(Icons.person, color: Colors.white, size: 20)
+                      : Text(
+                          avatarLabel,
+                          style: const TextStyle(
+                            color: Colors.white,
+                            fontWeight: FontWeight.bold,
+                            fontSize: 18,
+                          ),
+                        ),
+                ),
+              ),
+            ),
+            const SizedBox(width: 10),
+
+            // --- THANH TÌM KIẾM ---
+            Expanded(
+              child: GestureDetector(
+                onTap: () {
+                  Navigator.push(
+                    context,
+                    MaterialPageRoute(
+                        builder: (_) => const TimKiemScreen()),
+                  );
+                },
+                child: Container(
+                  height: 40,
+                  decoration: BoxDecoration(
+                      color: Colors.grey[200],
+                      borderRadius: BorderRadius.circular(20)),
+                  child: const Row(
+                    children: [
+                      SizedBox(width: 12),
+                      Icon(Icons.search, color: Colors.grey),
+                      SizedBox(width: 8),
+                      Text('Tìm kiếm sách...',
+                          style: TextStyle(color: Colors.grey, fontSize: 16)),
+                    ],
                   ),
-                  // Chỉ hiện vòng đỏ nếu có đồ trong giỏ
-                  if (cart.itemCount > 0)
-                    Positioned(
-                      right: 8,
-                      top: 8,
-                      child: Container(
-                        padding: const EdgeInsets.all(2),
-                        decoration: BoxDecoration(
-                          color: Colors.red,
-                          borderRadius: BorderRadius.circular(10),
+                ),
+              ),
+            ),
+            const SizedBox(width: 5),
+
+            // --- NÚT THÔNG BÁO ---
+            Stack(
+              children: [
+                IconButton(
+                  icon: const Icon(Icons.notifications_none_outlined,
+                      color: Colors.grey, size: 28),
+                  onPressed: () {
+                    // Reset số lượng thông báo khi bấm xem
+                    setState(() {
+                      _notificationCount = 0;
+                    });
+                    Navigator.push(
+                      context,
+                      MaterialPageRoute(
+                          builder: (_) => const NotificationScreen()),
+                    );
+                  },
+                ),
+                if (_notificationCount > 0)
+                  Positioned(
+                    right: 6,
+                    top: 6,
+                    child: Container(
+                      padding: const EdgeInsets.all(2),
+                      decoration: BoxDecoration(
+                        color: Colors.red,
+                        borderRadius: BorderRadius.circular(10),
+                        border: Border.all(color: Colors.white, width: 1),
+                      ),
+                      constraints: const BoxConstraints(
+                        minWidth: 16,
+                        minHeight: 16,
+                      ),
+                      child: Text(
+                        '$_notificationCount',
+                        style: const TextStyle(
+                          color: Colors.white,
+                          fontSize: 10,
+                          fontWeight: FontWeight.bold,
                         ),
-                        constraints: const BoxConstraints(minWidth: 16, minHeight: 16),
-                        child: Text(
-                          '${cart.itemCount}',
-                          style: const TextStyle(color: Colors.white, fontSize: 10, fontWeight: FontWeight.bold),
-                          textAlign: TextAlign.center,
-                        ),
+                        textAlign: TextAlign.center,
                       ),
                     ),
-                ],
-              );
-            },
-          ),
-          const SizedBox(width: 10),
-        ],
+                  ),
+              ],
+            ),
+
+            // --- NÚT GIỎ HÀNG ---
+            Stack(
+              children: [
+                IconButton(
+                  icon: const Icon(Icons.shopping_cart_outlined,
+                      color: Colors.grey, size: 28),
+                  onPressed: () {
+                    if (isGuest) {
+                      // Nếu là khách -> Yêu cầu đăng nhập
+                      _navigateToLogin();
+                    } else {
+                      Navigator.push(
+                        context,
+                        MaterialPageRoute(
+                            builder: (_) =>
+                                GioHangScreen(user: widget.user!)),
+                      );
+                    }
+                  },
+                ),
+                // Chỉ hiện số lượng badge nếu KHÔNG phải là khách
+                if (!isGuest)
+                  Positioned(
+                    right: 5,
+                    top: 5,
+                    child: Consumer<CartProvider>(
+                      builder: (context, cart, child) {
+                        if (cart.itemCount == 0) {
+                          return const SizedBox.shrink();
+                        }
+                        return Container(
+                          padding: const EdgeInsets.all(2),
+                          decoration: BoxDecoration(
+                              color: Colors.red,
+                              borderRadius: BorderRadius.circular(10)),
+                          constraints: const BoxConstraints(
+                              minWidth: 16, minHeight: 16),
+                          child: Text('${cart.itemCount}',
+                              style: const TextStyle(
+                                  color: Colors.white, fontSize: 10),
+                              textAlign: TextAlign.center),
+                        );
+                      },
+                    ),
+                  ),
+              ],
+            ),
+          ],
+        ),
       ),
 
-      // Xử lý luồng đợi dữ liệu từ API bằng FutureBuilder
-      body: FutureBuilder<List<Sach>>(
-        future: _futureBooks,
-        builder: (context, snapshot) {
-          // Trạng thái 1: Đang chờ mạng (Hiện vòng xoay)
-          if (snapshot.connectionState == ConnectionState.waiting) {
-            return const Center(child: CircularProgressIndicator(color: Colors.deepOrange));
-          }
-          // Trạng thái 2: Lỗi mạng hoặc lỗi server
-          else if (snapshot.hasError) {
-            return Center(child: Text('Lỗi tải dữ liệu: ${snapshot.error}', style: const TextStyle(color: Colors.red)));
-          }
-          // Trạng thái 3: Call API thành công nhưng CSDL chưa có sách nào
-          else if (!snapshot.hasData || snapshot.data!.isEmpty) {
-            return const Center(child: Text('Kho sách hiện đang trống!', style: TextStyle(fontSize: 16)));
-          }
+      // Hiển thị nội dung Tab được chọn
+      body: widgetOptions.elementAt(_selectedIndex),
 
-          // Trạng thái 4: Có dữ liệu -> Hiển thị danh sách
-          List<Sach> books = snapshot.data!;
-
-          return GridView.builder(
-            padding: const EdgeInsets.all(12),
-            gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
-              crossAxisCount: 2,       // 2 cột sách
-              childAspectRatio: 0.65,  // Chỉnh tỷ lệ để không bị lẹm chữ (cao/rộng)
-              crossAxisSpacing: 12,
-              mainAxisSpacing: 12,
-            ),
-            itemCount: books.length,
-            itemBuilder: (context, index) {
-              return BookCard(sach: books[index]);
-            },
-          );
-        },
+      bottomNavigationBar: BottomNavigationBar(
+        items: const <BottomNavigationBarItem>[
+          BottomNavigationBarItem(
+              icon: Icon(Icons.home_outlined), label: 'Trang chủ'),
+          BottomNavigationBarItem(
+              icon: Icon(Icons.menu_book), label: 'Danh mục'),
+          BottomNavigationBarItem(
+              icon: Icon(Icons.person_outline), label: 'Cá nhân'),
+        ],
+        currentIndex: _selectedIndex,
+        selectedItemColor: AppColors.primaryBlue,
+        unselectedItemColor: Colors.grey,
+        onTap: _onItemTapped,
+        type: BottomNavigationBarType.fixed,
       ),
     );
   }
 }
 
-// ==============================================================
-// WIDGET CARD HIỂN THỊ 1 CUỐN SÁCH (Có nhãn giảm giá)
-// ==============================================================
-class BookCard extends StatelessWidget {
-  final Sach sach;
-
-  const BookCard({super.key, required this.sach});
+// --- WIDGET PHỤ: HIỂN THỊ KHI YÊU CẦU ĐĂNG NHẬP ---
+class LoginRequiredView extends StatelessWidget {
+  final String title;
+  const LoginRequiredView({super.key, required this.title});
 
   @override
   Widget build(BuildContext context) {
-    return Container(
-      decoration: BoxDecoration(
-        color: Colors.white,
-        borderRadius: BorderRadius.circular(12),
-        boxShadow: [
-          BoxShadow(color: Colors.black.withOpacity(0.05), blurRadius: 8, spreadRadius: 2),
-        ],
-      ),
-      child: ClipRRect(
-        borderRadius: BorderRadius.circular(12),
+    return Center(
+      child: Padding(
+        padding: const EdgeInsets.all(20.0),
         child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
+          mainAxisAlignment: MainAxisAlignment.center,
           children: [
-            // 1. Hình ảnh Sách (Bọc trong Stack để gắn nhãn Giảm giá đè lên trên)
-            Expanded(
-              child: Stack(
-                fit: StackFit.expand,
-                children: [
-                  Image.network(
-                    '${ApiService.imageUrl}${sach.hinhAnh}',
-                    fit: BoxFit.cover,
-                    // Hiển thị vòng xoay lúc ảnh đang tải
-                    loadingBuilder: (context, child, loadingProgress) {
-                      if (loadingProgress == null) return child;
-                      return const Center(child: CircularProgressIndicator(strokeWidth: 2));
-                    },
-                    // Hiển thị icon xám nếu ảnh bị lỗi (không tìm thấy trong wwwroot)
-                    errorBuilder: (context, error, stackTrace) =>
-                        Container(color: Colors.grey[300], child: const Icon(Icons.book, size: 50, color: Colors.grey)),
-                  ),
-
-                  // Nhãn giảm giá màu đỏ góc trên bên trái
-                  if (sach.phanTramGiam > 0)
-                    Positioned(
-                      top: 8,
-                      left: 8,
-                      child: Container(
-                        padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
-                        decoration: BoxDecoration(
-                          color: Colors.red,
-                          borderRadius: BorderRadius.circular(12),
-                        ),
-                        child: Text(
-                          '-${sach.phanTramGiam}%',
-                          style: const TextStyle(color: Colors.white, fontWeight: FontWeight.bold, fontSize: 12),
-                        ),
-                      ),
-                    ),
-                ],
-              ),
+            Icon(Icons.lock_outline, size: 80, color: Colors.grey[400]),
+            const SizedBox(height: 20),
+            Text(
+              "Bạn cần đăng nhập",
+              style: TextStyle(
+                  fontSize: 20,
+                  fontWeight: FontWeight.bold,
+                  color: Colors.grey[800]),
             ),
-
-            // 2. Thông tin Tên sách và Giá tiền
-            Padding(
-              padding: const EdgeInsets.all(8.0),
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Text(
-                    sach.tenSach,
-                    style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 14),
-                    maxLines: 2,
-                    overflow: TextOverflow.ellipsis, // Quá dài sẽ biến thành "..."
-                  ),
-                  const SizedBox(height: 6),
-
-                  // Logic hiển thị giá
-                  if (sach.phanTramGiam > 0) ...[
-                    // Giá gốc gạch ngang
-                    Text(
-                      '${sach.giaGoc.toStringAsFixed(0)} đ',
-                      style: const TextStyle(fontSize: 12, color: Colors.grey, decoration: TextDecoration.lineThrough),
-                    ),
-                    // Giá sale màu đỏ
-                    Text(
-                      '${sach.giaBanThucTe.toStringAsFixed(0)} đ',
-                      style: const TextStyle(fontSize: 16, color: Colors.red, fontWeight: FontWeight.bold),
-                    ),
-                  ] else ...[
-                    // Không sale thì hiện giá đen bình thường
-                    Text(
-                      '${sach.giaGoc.toStringAsFixed(0)} đ',
-                      style: const TextStyle(fontSize: 16, color: Colors.deepOrange, fontWeight: FontWeight.bold),
-                    ),
-                  ],
-                ],
+            const SizedBox(height: 10),
+            const Text(
+              "Vui lòng đăng nhập để xem thông tin cá nhân và quản lý đơn hàng.",
+              textAlign: TextAlign.center,
+              style: TextStyle(color: Colors.grey),
+            ),
+            const SizedBox(height: 30),
+            ElevatedButton(
+              onPressed: () {
+                Navigator.push(
+                  context,
+                  MaterialPageRoute(builder: (_) => const LoginScreen()),
+                );
+              },
+              style: ElevatedButton.styleFrom(
+                padding:
+                    const EdgeInsets.symmetric(horizontal: 40, vertical: 12),
+                backgroundColor: AppColors.primaryBlue,
               ),
+              child: const Text("Đăng nhập ngay",
+                  style: TextStyle(color: Colors.white)),
             ),
           ],
         ),
