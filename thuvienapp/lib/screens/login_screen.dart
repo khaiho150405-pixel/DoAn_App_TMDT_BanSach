@@ -1,19 +1,16 @@
+import 'dart:convert';
+
 import 'package:flutter/material.dart';
 import 'package:http/http.dart' as http;
-import 'dart:convert';
 import 'package:provider/provider.dart';
 
 import '../models/user.dart';
-import '../providers/user_provider.dart';
 import '../providers/api_service.dart';
+import '../providers/user_provider.dart';
 import '../theme/app_theme.dart';
-
-// Import các màn hình để điều hướng
+import 'KhachHang/home_screen.dart';
 import 'NVSale/sale_home_screen.dart';
-import 'KhachHang/home_screen.dart'; // Màn hình khách hàng
-// Import tạm các màn hình khác (Nếu bạn chưa làm tới thì có thể comment lại)
-// import 'Admin/AdminHome.dart';
-// import 'ThuKho/ThuKho_home.dart';
+import 'admin/admin_main_screen.dart';
 
 class LoginScreen extends StatefulWidget {
   const LoginScreen({super.key});
@@ -30,7 +27,6 @@ class _LoginScreenState extends State<LoginScreen> {
   bool _isLoading = false;
   bool _obscurePassword = true;
 
-  // Hàm gọi API Đăng nhập
   Future<void> _login() async {
     if (!_formKey.currentState!.validate()) return;
 
@@ -41,69 +37,66 @@ class _LoginScreenState extends State<LoginScreen> {
     try {
       final response = await http.post(
         Uri.parse('${ApiService.baseUrl}/Auth/Login'),
-        headers: {"Content-Type": "application/json"},
-        body: jsonEncode({
-          "TenDangNhap": _usernameController.text.trim(),
-          "MatKhau": _passwordController.text.trim()
+        headers: {'Content-Type': 'application/json'},
+        body: json.encode({
+          'TenDangNhap': _usernameController.text.trim(),
+          'MatKhau': _passwordController.text.trim(),
         }),
       );
 
-      final data = jsonDecode(response.body);
+      final data = json.decode(response.body) as Map<String, dynamic>;
 
       if (response.statusCode == 200) {
-        // 1. Chuyển JSON thành đối tượng User
-        User loggedInUser = User.fromJson(data);
+        final loggedInUser = User.fromJson(data);
 
-        // 2. Lưu vào State Management (Provider)
-        if (mounted) {
-          Provider.of<UserProvider>(context, listen: false).setUser(loggedInUser);
-        }
+        if (!mounted) return;
+        Provider.of<UserProvider>(context, listen: false).setUser(loggedInUser);
 
-        // 3. Điều hướng dựa theo Role (Phân quyền)
-        if (mounted) {
-          ScaffoldMessenger.of(context).showSnackBar(
-            SnackBar(content: Text('Chào mừng ${loggedInUser.fullName}!'), backgroundColor: Colors.green),
-          );
-
-          Widget nextScreen;
-          switch (loggedInUser.roleId) {
-            case 1:
-            // nextScreen = const AdminHomeScreen(); // Chờ tạo màn hình Admin
-              nextScreen = HomeScreen(user: loggedInUser); // Tạm thời đẩy về Home
-              break;
-            case 2:
-              nextScreen = const SaleHomeScreen(); // Vào thẳng Dashboard Sale
-              break;
-            case 3:
-            // nextScreen = const ThuKhoHomeScreen(); // Chờ cập nhật màn hình Kho
-              nextScreen = HomeScreen(user: loggedInUser);
-              break;
-            case 4:
-            default:
-              nextScreen = HomeScreen(user: loggedInUser); // Khách hàng vào trang mua sắm
-              break;
-          }
-
-          // Chuyển trang và xóa lịch sử (không cho back lại trang login)
-          Navigator.pushReplacement(
-            context,
-            MaterialPageRoute(builder: (context) => nextScreen),
-          );
-        }
-      } else {
-        // Sai tài khoản / mật khẩu
-        if (mounted) {
-          ScaffoldMessenger.of(context).showSnackBar(
-            SnackBar(content: Text(data['message'] ?? 'Đăng nhập thất bại'), backgroundColor: Colors.red),
-          );
-        }
-      }
-    } catch (e) {
-      if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text('Không thể kết nối đến máy chủ API!'), backgroundColor: Colors.red),
+          SnackBar(
+            content: Text('Chao mung ${loggedInUser.fullName}!'),
+            backgroundColor: Colors.green,
+          ),
+        );
+
+        late final Widget nextScreen;
+        switch (loggedInUser.roleId) {
+          case 1:
+            nextScreen = const AdminMainScreen();
+            break;
+          case 2:
+            nextScreen = const SaleHomeScreen();
+            break;
+          case 3:
+            nextScreen = HomeScreen(user: loggedInUser);
+            break;
+          case 4:
+          default:
+            nextScreen = HomeScreen(user: loggedInUser);
+            break;
+        }
+
+        Navigator.pushReplacement(
+          context,
+          MaterialPageRoute(builder: (context) => nextScreen),
+        );
+      } else {
+        if (!mounted) return;
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text(data['message'] ?? 'Dang nhap that bai'),
+            backgroundColor: Colors.red,
+          ),
         );
       }
+    } catch (e) {
+      if (!mounted) return;
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text('Khong the ket noi den may chu API!'),
+          backgroundColor: Colors.red,
+        ),
+      );
     } finally {
       if (mounted) {
         setState(() {
@@ -116,13 +109,13 @@ class _LoginScreenState extends State<LoginScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: Colors.white,
+      backgroundColor: AppColors.backgroundLight,
       body: SafeArea(
         child: Center(
           child: SingleChildScrollView(
-            padding: const EdgeInsets.all(24.0),
+            padding: const EdgeInsets.all(24),
             child: Container(
-              padding: const EdgeInsets.all(24.0),
+              padding: const EdgeInsets.all(24),
               decoration: BoxDecoration(
                 color: Colors.white,
                 borderRadius: BorderRadius.circular(20),
@@ -141,80 +134,109 @@ class _LoginScreenState extends State<LoginScreen> {
                   mainAxisAlignment: MainAxisAlignment.center,
                   crossAxisAlignment: CrossAxisAlignment.stretch,
                   children: [
-                    // Logo / Icon ứng dụng
-                    const Icon(Icons.book_online, size: 80, color: AppColors.primaryBlue),
+                    const Icon(
+                      Icons.book_online,
+                      size: 80,
+                      color: AppColors.primaryBlue,
+                    ),
                     const SizedBox(height: 16),
                     const Text(
                       'E-BookStore',
                       textAlign: TextAlign.center,
-                      style: TextStyle(fontSize: 26, fontWeight: FontWeight.bold, color: AppColors.primaryBlue),
+                      style: TextStyle(
+                        fontSize: 26,
+                        fontWeight: FontWeight.bold,
+                        color: AppColors.primaryBlue,
+                      ),
                     ),
                     const SizedBox(height: 40),
-
-                    // Ô nhập Tài khoản
                     TextFormField(
                       controller: _usernameController,
                       decoration: InputDecoration(
-                        labelText: 'Tên đăng nhập',
+                        labelText: 'Ten dang nhap',
                         prefixIcon: const Icon(Icons.person),
-                        border: OutlineInputBorder(borderRadius: BorderRadius.circular(12)),
+                        border: OutlineInputBorder(
+                          borderRadius: BorderRadius.circular(12),
+                        ),
                       ),
-                      validator: (value) => value!.isEmpty ? 'Vui lòng nhập tên đăng nhập' : null,
+                      validator: (value) => value == null || value.isEmpty
+                          ? 'Vui long nhap ten dang nhap'
+                          : null,
                     ),
                     const SizedBox(height: 20),
-
-                    // Ô nhập Mật khẩu
                     TextFormField(
                       controller: _passwordController,
                       obscureText: _obscurePassword,
                       decoration: InputDecoration(
-                        labelText: 'Mật khẩu',
+                        labelText: 'Mat khau',
                         prefixIcon: const Icon(Icons.lock),
                         suffixIcon: IconButton(
-                          icon: Icon(_obscurePassword ? Icons.visibility : Icons.visibility_off),
+                          icon: Icon(
+                            _obscurePassword
+                                ? Icons.visibility
+                                : Icons.visibility_off,
+                          ),
                           onPressed: () {
                             setState(() {
                               _obscurePassword = !_obscurePassword;
                             });
                           },
                         ),
-                        border: OutlineInputBorder(borderRadius: BorderRadius.circular(12)),
+                        border: OutlineInputBorder(
+                          borderRadius: BorderRadius.circular(12),
+                        ),
                       ),
-                      validator: (value) => value!.isEmpty ? 'Vui lòng nhập mật khẩu' : null,
+                      validator: (value) => value == null || value.isEmpty
+                          ? 'Vui long nhap mat khau'
+                          : null,
                     ),
                     const SizedBox(height: 30),
-
-                    // Nút Đăng nhập
                     SizedBox(
                       height: 50,
                       child: ElevatedButton(
                         style: ElevatedButton.styleFrom(
                           backgroundColor: AppColors.primaryBlue,
                           foregroundColor: Colors.white,
-                          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+                          shape: RoundedRectangleBorder(
+                            borderRadius: BorderRadius.circular(12),
+                          ),
                           elevation: 0,
                         ),
                         onPressed: _isLoading ? null : _login,
                         child: _isLoading
-                            ? const CircularProgressIndicator(color: Colors.white)
-                            : const Text('ĐĂNG NHẬP', style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold)),
+                            ? const CircularProgressIndicator(
+                                color: Colors.white,
+                              )
+                            : const Text(
+                                'DANG NHAP',
+                                style: TextStyle(
+                                  fontSize: 16,
+                                  fontWeight: FontWeight.bold,
+                                ),
+                              ),
                       ),
                     ),
                     const SizedBox(height: 20),
-
-                    // Link Đăng ký (Dành cho khách hàng)
                     Row(
                       mainAxisAlignment: MainAxisAlignment.center,
                       children: [
-                        const Text('Chưa có tài khoản?'),
+                        const Text('Chua co tai khoan?'),
                         TextButton(
                           onPressed: () {
-                            // TODO: Chuyển sang màn hình Đăng ký
                             ScaffoldMessenger.of(context).showSnackBar(
-                              const SnackBar(content: Text('Tính năng đăng ký đang cập nhật')),
+                              const SnackBar(
+                                content:
+                                    Text('Tinh nang dang ky dang cap nhat'),
+                              ),
                             );
                           },
-                          child: const Text('Đăng ký ngay', style: TextStyle(color: AppColors.primaryBlue, fontWeight: FontWeight.bold)),
+                          child: const Text(
+                            'Dang ky ngay',
+                            style: TextStyle(
+                              color: AppColors.primaryBlue,
+                              fontWeight: FontWeight.bold,
+                            ),
+                          ),
                         ),
                       ],
                     ),
@@ -226,5 +248,12 @@ class _LoginScreenState extends State<LoginScreen> {
         ),
       ),
     );
+  }
+
+  @override
+  void dispose() {
+    _usernameController.dispose();
+    _passwordController.dispose();
+    super.dispose();
   }
 }

@@ -11,7 +11,11 @@ class BookFilterModel {
     this.maxPrice,
   });
 
-  bool get hasFilter => author != null || publisher != null || minPrice != null || maxPrice != null;
+  bool get hasFilter =>
+      author != null ||
+      publisher != null ||
+      minPrice != null ||
+      maxPrice != null;
 
   void clear() {
     author = null;

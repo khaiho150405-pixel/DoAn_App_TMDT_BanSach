@@ -88,9 +88,9 @@ namespace BookStoreAPI.Controllers
             if (user.Maquyen == 4) // Khách hàng
             {
                 var kh = await _context.Khachhangs.FirstOrDefaultAsync(k => k.Mataikhoan == user.Mataikhoan);
-                if (kh != null) { 
-                    userDetailId = kh.Makh; 
-                    hoVaTen = kh.Hovaten; 
+                if (kh != null) {
+                    userDetailId = kh.Makh;
+                    hoVaTen = kh.Hovaten;
                     sdt = kh.Sdt;
                     diaChiMacDinh = kh.Diachimacdinh;
                     if (string.IsNullOrEmpty(email)) email = kh.Email;
@@ -99,9 +99,9 @@ namespace BookStoreAPI.Controllers
             else // Admin hoặc các phân quyền Nhân viên khác
             {
                 var nv = await _context.Nhanviens.FirstOrDefaultAsync(n => n.Mataikhoan == user.Mataikhoan);
-                if (nv != null) { 
-                    userDetailId = nv.Manv; 
-                    hoVaTen = nv.Hovaten; 
+                if (nv != null) {
+                    userDetailId = nv.Manv;
+                    hoVaTen = nv.Hovaten;
                     sdt = nv.Sdt;
                     diaChiMacDinh = null; // Nhân viên không có địa chỉ trong model
                     if (string.IsNullOrEmpty(email)) email = nv.Email;
@@ -122,6 +122,44 @@ namespace BookStoreAPI.Controllers
                 email = email
             });
         }
+
+        // 3. ĐỔI MẬT KHẨU
+        [HttpPut("ChangePassword")]
+        public async Task<IActionResult> ChangePassword([FromBody] ChangePasswordRequest request)
+        {
+            var user = await _context.Taikhoans.FindAsync(request.MaTaiKhoan);
+            if (user == null) return NotFound(new { message = "Tài khoản không tồn tại!" });
+
+            if (user.Matkhau != request.MatKhauCu)
+                return BadRequest(new { message = "Mật khẩu cũ không chính xác!" });
+
+            if (request.MatKhauMoi.Length < 6)
+                return BadRequest(new { message = "Mật khẩu mới phải có ít nhất 6 ký tự!" });
+
+            user.Matkhau = request.MatKhauMoi;
+            await _context.SaveChangesAsync();
+
+            return Ok(new { message = "Đổi mật khẩu thành công!" });
+        }
+
+        // 4. LOGS HỆ THỐNG (Trả về lịch sử đơn hàng gần đây làm log)
+        [HttpGet("Logs")]
+        public async Task<IActionResult> GetLogs()
+        {
+            var logs = await _context.Donhangs
+                .OrderByDescending(d => d.Ngaydat)
+                .Take(50)
+                .Select(d => new
+                {
+                    Id = d.Madh,
+                    Action = $"Đơn hàng #{d.Madh} - {d.Trangthaidonhang}",
+                    Detail = $"Người nhận: {d.Tennguoinhan ?? "N/A"} | Tổng: {d.Tongtien:N0}đ",
+                    Time = d.Ngaydat
+                })
+                .ToListAsync();
+
+            return Ok(logs);
+        }
     }
 
     public class RegisterRequest
@@ -138,5 +176,12 @@ namespace BookStoreAPI.Controllers
     {
         public string TenDangNhap { get; set; } = null!;
         public string MatKhau { get; set; } = null!;
+    }
+
+    public class ChangePasswordRequest
+    {
+        public int MaTaiKhoan { get; set; }
+        public string MatKhauCu { get; set; } = null!;
+        public string MatKhauMoi { get; set; } = null!;
     }
 }

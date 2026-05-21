@@ -1,4 +1,3 @@
-/// Model Sách - Dùng cho toàn bộ app bán sách
 class Sach {
   final int maSach;
   final String tenSach;
@@ -10,15 +9,13 @@ class Sach {
   final double giaBanThucTe;
   final int phanTramGiam;
   final String? tenSuKienKhuyenMai;
-
-  // --- CÁC TRƯỜNG MỚI CHO TRANG CHI TIẾT (nullable, backward compatible) ---
-  final String? moTa;           // Mô tả sách
-  final String? nhaCungCap;     // Nhà cung cấp
-  final String? loaiBia;        // Loại bìa (Bìa mềm, Bìa cứng...)
-  final int? soLuongTonKho;     // Số lượng tồn kho
-  final double? danhGiaSao;     // Đánh giá sao trung bình (1-5)
-  final int? soLuongDanhGia;    // Số lượng đánh giá
-  final List<String>? danhSachAnh; // Danh sách ảnh preview
+  final String? moTa;
+  final String? nhaCungCap;
+  final String? loaiBia;
+  final int? soLuongTonKho;
+  final double? danhGiaSao;
+  final int? soLuongDanhGia;
+  final List<String>? danhSachAnh;
 
   Sach({
     required this.maSach,
@@ -41,49 +38,51 @@ class Sach {
   });
 
   factory Sach.fromJson(Map<String, dynamic> json) {
-    // Parse danh sách ảnh nếu có
     List<String>? images;
     if (json['danhSachAnh'] != null) {
       images = List<String>.from(json['danhSachAnh']);
     }
 
     return Sach(
-      maSach: json['masach'] ?? 0,
-      tenSach: json['tensach'] ?? 'Chưa có tên',
-      theLoai: json['tenTheLoai'] ?? json['theloai'],
-      hinhAnh: json['hinhanh'] ?? 'default_book.jpg',
+      maSach: json['masach'] ?? json['maSach'] ?? 0,
+      tenSach: json['tensach'] ?? json['tenSach'] ?? 'Chua co ten',
+      theLoai: json['tenTheLoai'] ?? json['theloai'] ?? json['theLoai'],
+      hinhAnh: json['hinhanh'] ?? json['hinhAnh'] ?? 'default_book.jpg',
       tenTacGia: json['tenTacGia'],
-      nhaXuatBan: json['tenNxb'],
-      giaGoc: (json['giaGoc'] ?? 0).toDouble(),
-      giaBanThucTe: (json['giaBanThucTe'] ?? 0).toDouble(),
+      nhaXuatBan: json['tenNxb'] ?? json['nhaXuatBan'],
+      giaGoc: _toDouble(json['giaGoc']),
+      giaBanThucTe: _toDouble(json['giaBanThucTe']),
       phanTramGiam: json['phanTramGiam'] ?? 0,
       tenSuKienKhuyenMai: json['tenSuKienKhuyenMai'],
       moTa: json['moTa'],
       nhaCungCap: json['nhaCungCap'],
       loaiBia: json['loaiBia'],
       soLuongTonKho: json['soLuongTonKho'],
-      danhGiaSao: (json['danhGiaSao'] ?? 0).toDouble(),
+      danhGiaSao: _toDouble(json['danhGiaSao']),
       soLuongDanhGia: json['soLuongDanhGia'],
       danhSachAnh: images,
     );
   }
 
-  /// Kiểm tra còn hàng không
   bool get conHang => (soLuongTonKho ?? 0) > 0;
 
-  /// Lấy danh sách tất cả ảnh (ảnh chính + ảnh phụ)
   List<String> get tatCaAnh {
-    List<String> result = [];
+    final result = <String>[];
     if (hinhAnh != null && hinhAnh!.isNotEmpty) {
       result.add(hinhAnh!);
     }
     if (danhSachAnh != null) {
       result.addAll(danhSachAnh!);
     }
-    // Nếu không có ảnh nào, trả về ảnh mặc định
     if (result.isEmpty) {
       result.add('default_book.jpg');
     }
     return result;
+  }
+
+  static double _toDouble(dynamic value) {
+    if (value == null) return 0;
+    if (value is num) return value.toDouble();
+    return double.tryParse(value.toString()) ?? 0;
   }
 }

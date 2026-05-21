@@ -56,7 +56,8 @@ class OrderModel {
 
   factory OrderModel.fromJson(Map<String, dynamic> json) {
     var list = json['chiTiet'] as List? ?? [];
-    List<OrderDetail> detailList = list.map((i) => OrderDetail.fromJson(i)).toList();
+    List<OrderDetail> detailList =
+        list.map((i) => OrderDetail.fromJson(i)).toList();
 
     return OrderModel(
       maDH: json['maDH'],
@@ -68,7 +69,8 @@ class OrderModel {
       phuongThucThanhToan: json['phuongThucThanhToan'],
       trangThaiThanhToan: json['trangThaiThanhToan'],
       trangThaiDonHang: json['trangThaiDonHang'],
-      soLuongSanPham: json['soLuongSanPham'] ?? detailList.fold(0, (sum, item) => sum + item.soLuong),
+      soLuongSanPham: json['soLuongSanPham'] ??
+          detailList.fold(0, (sum, item) => sum + item.soLuong),
       chiTiet: detailList,
     );
   }

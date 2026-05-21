@@ -98,7 +98,8 @@ class _TimKiemScreenState extends State<TimKiemScreen> {
         ],
       ),
       body: _isLoading
-          ? const Center(child: CircularProgressIndicator(color: AppColors.primaryBlue))
+          ? const Center(
+              child: CircularProgressIndicator(color: AppColors.primaryBlue))
           : _filteredBooks.isEmpty
               ? Center(
                   child: Column(
@@ -126,41 +127,59 @@ class _TimKiemScreenState extends State<TimKiemScreen> {
                       decoration: BoxDecoration(
                         color: Colors.white,
                         borderRadius: BorderRadius.circular(10),
-                        boxShadow: [BoxShadow(color: Colors.black.withOpacity(0.04), blurRadius: 4)],
+                        boxShadow: [
+                          BoxShadow(
+                              color: Colors.black.withOpacity(0.04),
+                              blurRadius: 4)
+                        ],
                       ),
                       child: GestureDetector(
-                        onTap: () => Navigator.push(context, MaterialPageRoute(
-                          builder: (_) => BookDetailScreen(sach: sach))),
-                        child: ListTile(
-                        contentPadding: const EdgeInsets.all(8),
-                        leading: ClipRRect(
-                          borderRadius: BorderRadius.circular(6),
-                          child: SizedBox(
-                            width: 50, height: 70,
-                            child: Image.network(
-                              '${ApiService.imageUrl}${sach.hinhAnh}',
-                              fit: BoxFit.cover,
-                              errorBuilder: (c, e, s) => Container(
-                                color: Colors.grey[200],
-                                child: const Icon(Icons.book, color: Colors.grey),
+                          onTap: () => Navigator.push(
+                              context,
+                              MaterialPageRoute(
+                                  builder: (_) =>
+                                      BookDetailScreen(sach: sach))),
+                          child: ListTile(
+                            contentPadding: const EdgeInsets.all(8),
+                            leading: ClipRRect(
+                              borderRadius: BorderRadius.circular(6),
+                              child: SizedBox(
+                                width: 50,
+                                height: 70,
+                                child: Image.network(
+                                  '${ApiService.imageUrl}${sach.hinhAnh}',
+                                  fit: BoxFit.cover,
+                                  errorBuilder: (c, e, s) => Container(
+                                    color: Colors.grey[200],
+                                    child: const Icon(Icons.book,
+                                        color: Colors.grey),
+                                  ),
+                                ),
                               ),
                             ),
-                          ),
-                        ),
-                        title: Text(sach.tenSach,
-                            style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 14),
-                            maxLines: 2, overflow: TextOverflow.ellipsis),
-                        subtitle: Column(
-                          crossAxisAlignment: CrossAxisAlignment.start,
-                          children: [
-                            if (sach.tenTacGia != null)
-                              Text(sach.tenTacGia!, style: TextStyle(fontSize: 12, color: Colors.grey[600])),
-                            const SizedBox(height: 4),
-                            Text('${sach.giaBanThucTe.toStringAsFixed(0)} đ',
-                                style: const TextStyle(color: Colors.red, fontWeight: FontWeight.bold, fontSize: 14)),
-                          ],
-                        ),
-                      )),
+                            title: Text(sach.tenSach,
+                                style: const TextStyle(
+                                    fontWeight: FontWeight.bold, fontSize: 14),
+                                maxLines: 2,
+                                overflow: TextOverflow.ellipsis),
+                            subtitle: Column(
+                              crossAxisAlignment: CrossAxisAlignment.start,
+                              children: [
+                                if (sach.tenTacGia != null)
+                                  Text(sach.tenTacGia!,
+                                      style: TextStyle(
+                                          fontSize: 12,
+                                          color: Colors.grey[600])),
+                                const SizedBox(height: 4),
+                                Text(
+                                    '${sach.giaBanThucTe.toStringAsFixed(0)} đ',
+                                    style: const TextStyle(
+                                        color: Colors.red,
+                                        fontWeight: FontWeight.bold,
+                                        fontSize: 14)),
+                              ],
+                            ),
+                          )),
                     );
                   },
                 ),

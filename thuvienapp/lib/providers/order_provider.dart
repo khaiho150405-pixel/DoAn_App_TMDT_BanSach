@@ -4,7 +4,7 @@ import '../services/order_service.dart';
 
 class OrderProvider with ChangeNotifier {
   final OrderService _orderService = OrderService();
-  
+
   List<OrderModel> _orders = [];
   bool _isLoading = false;
   String? _error;

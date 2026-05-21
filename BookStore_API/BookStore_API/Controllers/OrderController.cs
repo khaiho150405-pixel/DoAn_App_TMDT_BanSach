@@ -114,7 +114,7 @@ namespace BookStoreAPI.Controllers
                 {
                     return BadRequest(new { success = false, message = "Không thể xác nhận đơn hàng này (không tồn tại hoặc không ở trạng thái Chờ xác nhận)" });
                 }
-                
+
                 var updatedOrder = await _orderService.GetOrderDetailAsync(orderId);
                 return Ok(new { success = true, message = "Xác nhận đơn hàng thành công", data = updatedOrder });
             }

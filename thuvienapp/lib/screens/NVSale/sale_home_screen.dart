@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
-import 'package:intl/intl.dart';
+
 import '../../providers/user_provider.dart';
 import '../../providers/api_service.dart';
 import '../login_screen.dart';
@@ -48,7 +48,12 @@ class _SaleHomeScreenState extends State<SaleHomeScreen> {
       bottomNavigationBar: Container(
         decoration: BoxDecoration(
           color: kCardWhite,
-          boxShadow: [BoxShadow(color: Colors.black.withOpacity(0.06), blurRadius: 16, offset: const Offset(0, -4))],
+          boxShadow: [
+            BoxShadow(
+                color: Colors.black.withOpacity(0.06),
+                blurRadius: 16,
+                offset: const Offset(0, -4))
+          ],
         ),
         child: SafeArea(
           child: Padding(
@@ -84,7 +89,11 @@ class _SaleHomeScreenState extends State<SaleHomeScreen> {
         child: Column(mainAxisSize: MainAxisSize.min, children: [
           Icon(icon, size: 24, color: isActive ? kPrimaryBlue : kTextGrey),
           const SizedBox(height: 2),
-          Text(label, style: TextStyle(fontSize: 10, fontWeight: isActive ? FontWeight.w700 : FontWeight.w500, color: isActive ? kPrimaryBlue : kTextGrey)),
+          Text(label,
+              style: TextStyle(
+                  fontSize: 10,
+                  fontWeight: isActive ? FontWeight.w700 : FontWeight.w500,
+                  color: isActive ? kPrimaryBlue : kTextGrey)),
         ]),
       ),
     );
@@ -149,7 +158,8 @@ class _DashboardTabState extends State<_DashboardTab> {
                 GestureDetector(
                   onTap: () {
                     // Chuyển sang tab Cá nhân
-                    final state = context.findAncestorStateOfType<_SaleHomeScreenState>();
+                    final state =
+                        context.findAncestorStateOfType<_SaleHomeScreenState>();
                     state?._goToTab(4);
                   },
                   child: Container(
@@ -161,26 +171,43 @@ class _DashboardTabState extends State<_DashboardTab> {
                     child: CircleAvatar(
                       radius: 20,
                       backgroundColor: kPrimaryBlue.withOpacity(0.1),
-                      child: const Icon(Icons.person_rounded, color: kPrimaryBlue, size: 22),
+                      child: const Icon(Icons.person_rounded,
+                          color: kPrimaryBlue, size: 22),
                     ),
                   ),
                 ),
                 const SizedBox(width: 12),
-                Expanded(child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
-                  Text('Xin chào, ${user?.fullName ?? "Nhân viên"}', style: const TextStyle(fontSize: 18, fontWeight: FontWeight.bold, color: kTextDark)),
-                  const Text('Tổng quan hoạt động BookStore', style: TextStyle(fontSize: 13, color: kTextGrey)),
-                ])),
+                Expanded(
+                    child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                      Text('Xin chào, ${user?.fullName ?? "Nhân viên"}',
+                          style: const TextStyle(
+                              fontSize: 18,
+                              fontWeight: FontWeight.bold,
+                              color: kTextDark)),
+                      const Text('Tổng quan hoạt động BookStore',
+                          style: TextStyle(fontSize: 13, color: kTextGrey)),
+                    ])),
                 Stack(children: [
                   Container(
                     padding: const EdgeInsets.all(10),
-                    decoration: BoxDecoration(color: kPrimaryBlue.withOpacity(0.08), borderRadius: BorderRadius.circular(12)),
-                    child: const Icon(Icons.notifications_rounded, color: kPrimaryBlue, size: 22),
+                    decoration: BoxDecoration(
+                        color: kPrimaryBlue.withOpacity(0.08),
+                        borderRadius: BorderRadius.circular(12)),
+                    child: const Icon(Icons.notifications_rounded,
+                        color: kPrimaryBlue, size: 22),
                   ),
                   if (_pendingOrders + _pendingQuestions > 0)
-                    Positioned(top: 4, right: 4, child: Container(
-                      width: 10, height: 10,
-                      decoration: const BoxDecoration(color: Colors.redAccent, shape: BoxShape.circle),
-                    )),
+                    Positioned(
+                        top: 4,
+                        right: 4,
+                        child: Container(
+                          width: 10,
+                          height: 10,
+                          decoration: const BoxDecoration(
+                              color: Colors.redAccent, shape: BoxShape.circle),
+                        )),
                 ]),
               ]),
 
@@ -229,7 +256,11 @@ class _DashboardTabState extends State<_DashboardTab> {
               const SizedBox(height: 24),
 
               // === QUICK ACTIONS ===
-              const Text('Thao tác nhanh', style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold, color: kTextDark)),
+              const Text('Thao tác nhanh',
+                  style: TextStyle(
+                      fontSize: 16,
+                      fontWeight: FontWeight.bold,
+                      color: kTextDark)),
               const SizedBox(height: 12),
               _quickAction(
                 icon: Icons.person_add_alt_1_rounded,
@@ -237,7 +268,10 @@ class _DashboardTabState extends State<_DashboardTab> {
                 iconColor: const Color(0xFF7C3AED),
                 title: 'Tạo tài khoản khách hàng',
                 subtitle: 'Mở TK mới cho khách tại quầy',
-                onTap: () => Navigator.push(context, MaterialPageRoute(builder: (_) => const TaoTaiKhoanKhachScreen())),
+                onTap: () => Navigator.push(
+                    context,
+                    MaterialPageRoute(
+                        builder: (_) => const TaoTaiKhoanKhachScreen())),
               ),
               const SizedBox(height: 10),
               _quickAction(
@@ -246,7 +280,10 @@ class _DashboardTabState extends State<_DashboardTab> {
                 iconColor: const Color(0xFFD97706),
                 title: 'Quản lý đánh giá sách',
                 subtitle: 'Duyệt và xóa feedback vi phạm',
-                onTap: () => Navigator.push(context, MaterialPageRoute(builder: (_) => const QuanLyDanhGiaScreen())),
+                onTap: () => Navigator.push(
+                    context,
+                    MaterialPageRoute(
+                        builder: (_) => const QuanLyDanhGiaScreen())),
               ),
             ],
           ),
@@ -255,32 +292,51 @@ class _DashboardTabState extends State<_DashboardTab> {
     );
   }
 
-  Widget _statCard({required IconData icon, required Color iconBg, required Color iconColor, required String value, required String label}) {
+  Widget _statCard(
+      {required IconData icon,
+      required Color iconBg,
+      required Color iconColor,
+      required String value,
+      required String label}) {
     return Container(
       padding: const EdgeInsets.all(16),
       decoration: BoxDecoration(
         color: kCardWhite,
         borderRadius: BorderRadius.circular(16),
-        boxShadow: [BoxShadow(color: Colors.black.withOpacity(0.04), blurRadius: 10, offset: const Offset(0, 2))],
+        boxShadow: [
+          BoxShadow(
+              color: Colors.black.withOpacity(0.04),
+              blurRadius: 10,
+              offset: const Offset(0, 2))
+        ],
       ),
       child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
         Row(mainAxisAlignment: MainAxisAlignment.spaceBetween, children: [
           Container(
             padding: const EdgeInsets.all(8),
-            decoration: BoxDecoration(color: iconBg, borderRadius: BorderRadius.circular(10)),
+            decoration: BoxDecoration(
+                color: iconBg, borderRadius: BorderRadius.circular(10)),
             child: Icon(icon, color: iconColor, size: 22),
           ),
           Icon(Icons.more_horiz, color: Colors.grey.shade300, size: 20),
         ]),
         const Spacer(),
-        Text(value, style: const TextStyle(fontSize: 24, fontWeight: FontWeight.bold, color: kTextDark)),
+        Text(value,
+            style: const TextStyle(
+                fontSize: 24, fontWeight: FontWeight.bold, color: kTextDark)),
         const SizedBox(height: 2),
         Text(label, style: const TextStyle(fontSize: 12, color: kTextGrey)),
       ]),
     );
   }
 
-  Widget _quickAction({required IconData icon, required Color iconBg, required Color iconColor, required String title, required String subtitle, required VoidCallback onTap}) {
+  Widget _quickAction(
+      {required IconData icon,
+      required Color iconBg,
+      required Color iconColor,
+      required String title,
+      required String subtitle,
+      required VoidCallback onTap}) {
     return InkWell(
       onTap: onTap,
       borderRadius: BorderRadius.circular(16),
@@ -289,20 +345,34 @@ class _DashboardTabState extends State<_DashboardTab> {
         decoration: BoxDecoration(
           color: kCardWhite,
           borderRadius: BorderRadius.circular(16),
-          boxShadow: [BoxShadow(color: Colors.black.withOpacity(0.04), blurRadius: 10, offset: const Offset(0, 2))],
+          boxShadow: [
+            BoxShadow(
+                color: Colors.black.withOpacity(0.04),
+                blurRadius: 10,
+                offset: const Offset(0, 2))
+          ],
         ),
         child: Row(children: [
           Container(
             padding: const EdgeInsets.all(10),
-            decoration: BoxDecoration(color: iconBg, borderRadius: BorderRadius.circular(12)),
+            decoration: BoxDecoration(
+                color: iconBg, borderRadius: BorderRadius.circular(12)),
             child: Icon(icon, color: iconColor, size: 24),
           ),
           const SizedBox(width: 14),
-          Expanded(child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
-            Text(title, style: const TextStyle(fontWeight: FontWeight.w600, fontSize: 14, color: kTextDark)),
-            const SizedBox(height: 2),
-            Text(subtitle, style: const TextStyle(fontSize: 12, color: kTextGrey)),
-          ])),
+          Expanded(
+              child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                Text(title,
+                    style: const TextStyle(
+                        fontWeight: FontWeight.w600,
+                        fontSize: 14,
+                        color: kTextDark)),
+                const SizedBox(height: 2),
+                Text(subtitle,
+                    style: const TextStyle(fontSize: 12, color: kTextGrey)),
+              ])),
           const Icon(Icons.chevron_right_rounded, color: kTextGrey),
         ]),
       ),
@@ -326,7 +396,8 @@ class _CaNhanTab extends StatelessWidget {
           padding: const EdgeInsets.fromLTRB(20, 24, 20, 24),
           children: [
             // === PROFILE HEADER ===
-            Center(child: Column(children: [
+            Center(
+                child: Column(children: [
               Container(
                 padding: const EdgeInsets.all(4),
                 decoration: BoxDecoration(
@@ -336,19 +407,32 @@ class _CaNhanTab extends StatelessWidget {
                 child: CircleAvatar(
                   radius: 44,
                   backgroundColor: kPrimaryBlue.withOpacity(0.1),
-                  child: const Icon(Icons.person_rounded, size: 48, color: kPrimaryBlue),
+                  child: const Icon(Icons.person_rounded,
+                      size: 48, color: kPrimaryBlue),
                 ),
               ),
               const SizedBox(height: 14),
-              Text(user?.fullName ?? 'Nhân viên', style: const TextStyle(fontSize: 22, fontWeight: FontWeight.bold, color: kTextDark)),
+              Text(user?.fullName ?? 'Nhân viên',
+                  style: const TextStyle(
+                      fontSize: 22,
+                      fontWeight: FontWeight.bold,
+                      color: kTextDark)),
               const SizedBox(height: 4),
               Container(
-                padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 5),
-                decoration: BoxDecoration(color: kPrimaryBlue.withOpacity(0.1), borderRadius: BorderRadius.circular(20)),
-                child: Text(user?.roleName ?? 'Bán Hàng', style: const TextStyle(color: kPrimaryBlue, fontSize: 13, fontWeight: FontWeight.w600)),
+                padding:
+                    const EdgeInsets.symmetric(horizontal: 14, vertical: 5),
+                decoration: BoxDecoration(
+                    color: kPrimaryBlue.withOpacity(0.1),
+                    borderRadius: BorderRadius.circular(20)),
+                child: Text(user?.roleName ?? 'Bán Hàng',
+                    style: const TextStyle(
+                        color: kPrimaryBlue,
+                        fontSize: 13,
+                        fontWeight: FontWeight.w600)),
               ),
               const SizedBox(height: 4),
-              Text('@${user?.tenDangNhap ?? ''}', style: const TextStyle(color: kTextGrey, fontSize: 13)),
+              Text('@${user?.tenDangNhap ?? ''}',
+                  style: const TextStyle(color: kTextGrey, fontSize: 13)),
             ])),
 
             const SizedBox(height: 30),
@@ -359,26 +443,42 @@ class _CaNhanTab extends StatelessWidget {
               decoration: BoxDecoration(
                 color: kCardWhite,
                 borderRadius: BorderRadius.circular(16),
-                boxShadow: [BoxShadow(color: Colors.black.withOpacity(0.04), blurRadius: 10, offset: const Offset(0, 2))],
+                boxShadow: [
+                  BoxShadow(
+                      color: Colors.black.withOpacity(0.04),
+                      blurRadius: 10,
+                      offset: const Offset(0, 2))
+                ],
               ),
               child: Column(children: [
-                _infoRow(Icons.badge_outlined, 'Mã nhân viên', '${user?.realId ?? 'N/A'}'),
+                _infoRow(Icons.badge_outlined, 'Mã nhân viên',
+                    '${user?.realId ?? 'N/A'}'),
                 const Divider(height: 24),
-                _infoRow(Icons.account_circle_outlined, 'Tên đăng nhập', user?.tenDangNhap ?? 'N/A'),
+                _infoRow(Icons.account_circle_outlined, 'Tên đăng nhập',
+                    user?.tenDangNhap ?? 'N/A'),
                 const Divider(height: 24),
-                _infoRow(Icons.security_outlined, 'Phân quyền', user?.roleName ?? 'Bán Hàng'),
+                _infoRow(Icons.security_outlined, 'Phân quyền',
+                    user?.roleName ?? 'Bán Hàng'),
               ]),
             ),
 
             const SizedBox(height: 16),
 
             // === MENU ITEMS ===
-            _menuItem(context, Icons.star_rate_rounded, 'Quản lý đánh giá', const Color(0xFFF59E0B), onTap: () {
-              Navigator.push(context, MaterialPageRoute(builder: (_) => const QuanLyDanhGiaScreen()));
+            _menuItem(context, Icons.star_rate_rounded, 'Quản lý đánh giá',
+                const Color(0xFFF59E0B), onTap: () {
+              Navigator.push(
+                  context,
+                  MaterialPageRoute(
+                      builder: (_) => const QuanLyDanhGiaScreen()));
             }),
             const SizedBox(height: 8),
-            _menuItem(context, Icons.person_add_alt_1_rounded, 'Tạo tài khoản khách', const Color(0xFF7C3AED), onTap: () {
-              Navigator.push(context, MaterialPageRoute(builder: (_) => const TaoTaiKhoanKhachScreen()));
+            _menuItem(context, Icons.person_add_alt_1_rounded,
+                'Tạo tài khoản khách', const Color(0xFF7C3AED), onTap: () {
+              Navigator.push(
+                  context,
+                  MaterialPageRoute(
+                      builder: (_) => const TaoTaiKhoanKhachScreen()));
             }),
 
             const SizedBox(height: 24),
@@ -389,10 +489,15 @@ class _CaNhanTab extends StatelessWidget {
               height: 52,
               child: OutlinedButton.icon(
                 icon: const Icon(Icons.logout_rounded, color: Colors.redAccent),
-                label: const Text('Đăng xuất', style: TextStyle(color: Colors.redAccent, fontSize: 15, fontWeight: FontWeight.w600)),
+                label: const Text('Đăng xuất',
+                    style: TextStyle(
+                        color: Colors.redAccent,
+                        fontSize: 15,
+                        fontWeight: FontWeight.w600)),
                 style: OutlinedButton.styleFrom(
                   side: const BorderSide(color: Colors.redAccent),
-                  shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(14)),
+                  shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(14)),
                 ),
                 onPressed: () => _confirmLogout(context),
               ),
@@ -407,12 +512,18 @@ class _CaNhanTab extends StatelessWidget {
     return Row(children: [
       Icon(icon, color: kPrimaryBlue, size: 22),
       const SizedBox(width: 14),
-      Expanded(child: Text(label, style: const TextStyle(color: kTextGrey, fontSize: 13))),
-      Text(value, style: const TextStyle(fontWeight: FontWeight.w600, fontSize: 14, color: kTextDark)),
+      Expanded(
+          child: Text(label,
+              style: const TextStyle(color: kTextGrey, fontSize: 13))),
+      Text(value,
+          style: const TextStyle(
+              fontWeight: FontWeight.w600, fontSize: 14, color: kTextDark)),
     ]);
   }
 
-  Widget _menuItem(BuildContext context, IconData icon, String title, Color color, {required VoidCallback onTap}) {
+  Widget _menuItem(
+      BuildContext context, IconData icon, String title, Color color,
+      {required VoidCallback onTap}) {
     return InkWell(
       onTap: onTap,
       borderRadius: BorderRadius.circular(14),
@@ -421,16 +532,28 @@ class _CaNhanTab extends StatelessWidget {
         decoration: BoxDecoration(
           color: kCardWhite,
           borderRadius: BorderRadius.circular(14),
-          boxShadow: [BoxShadow(color: Colors.black.withOpacity(0.04), blurRadius: 10, offset: const Offset(0, 2))],
+          boxShadow: [
+            BoxShadow(
+                color: Colors.black.withOpacity(0.04),
+                blurRadius: 10,
+                offset: const Offset(0, 2))
+          ],
         ),
         child: Row(children: [
           Container(
             padding: const EdgeInsets.all(8),
-            decoration: BoxDecoration(color: color.withOpacity(0.12), borderRadius: BorderRadius.circular(10)),
+            decoration: BoxDecoration(
+                color: color.withOpacity(0.12),
+                borderRadius: BorderRadius.circular(10)),
             child: Icon(icon, color: color, size: 22),
           ),
           const SizedBox(width: 14),
-          Expanded(child: Text(title, style: const TextStyle(fontWeight: FontWeight.w600, fontSize: 14, color: kTextDark))),
+          Expanded(
+              child: Text(title,
+                  style: const TextStyle(
+                      fontWeight: FontWeight.w600,
+                      fontSize: 14,
+                      color: kTextDark))),
           const Icon(Icons.chevron_right_rounded, color: kTextGrey),
         ]),
       ),
@@ -445,12 +568,18 @@ class _CaNhanTab extends StatelessWidget {
         title: const Text('Đăng xuất'),
         content: const Text('Bạn có chắc muốn đăng xuất khỏi hệ thống?'),
         actions: [
-          TextButton(onPressed: () => Navigator.pop(ctx), child: const Text('Hủy')),
+          TextButton(
+              onPressed: () => Navigator.pop(ctx), child: const Text('Hủy')),
           ElevatedButton(
-            style: ElevatedButton.styleFrom(backgroundColor: Colors.redAccent, foregroundColor: Colors.white),
+            style: ElevatedButton.styleFrom(
+                backgroundColor: Colors.redAccent,
+                foregroundColor: Colors.white),
             onPressed: () {
               Provider.of<UserProvider>(context, listen: false).logout();
-              Navigator.pushAndRemoveUntil(context, MaterialPageRoute(builder: (_) => const LoginScreen()), (_) => false);
+              Navigator.pushAndRemoveUntil(
+                  context,
+                  MaterialPageRoute(builder: (_) => const LoginScreen()),
+                  (_) => false);
             },
             child: const Text('Đăng xuất'),
           ),

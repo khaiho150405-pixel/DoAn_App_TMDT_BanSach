@@ -62,7 +62,8 @@ class _TabDanhMucState extends State<TabDanhMuc> {
       future: _futureBooks,
       builder: (context, snapshot) {
         if (snapshot.connectionState == ConnectionState.waiting) {
-          return const Center(child: CircularProgressIndicator(color: AppColors.primaryBlue));
+          return const Center(
+              child: CircularProgressIndicator(color: AppColors.primaryBlue));
         }
         if (snapshot.hasError) {
           return Center(child: Text('Lỗi: ${snapshot.error}'));
@@ -97,9 +98,11 @@ class _TabDanhMucState extends State<TabDanhMuc> {
                   _buildChip('Tất cả', _selectedCategory == null, () {
                     setState(() => _selectedCategory = null);
                   }),
-                  ...categoryList.map((c) => _buildChip(c, _selectedCategory == c, () {
-                    setState(() => _selectedCategory = _selectedCategory == c ? null : c);
-                  })),
+                  ...categoryList
+                      .map((c) => _buildChip(c, _selectedCategory == c, () {
+                            setState(() => _selectedCategory =
+                                _selectedCategory == c ? null : c);
+                          })),
                 ],
               ),
             ),
@@ -109,7 +112,8 @@ class _TabDanhMucState extends State<TabDanhMuc> {
               child: Row(
                 children: [
                   Text(_selectedCategory ?? 'Tất cả sách',
-                      style: const TextStyle(fontSize: 16, fontWeight: FontWeight.bold)),
+                      style: const TextStyle(
+                          fontSize: 16, fontWeight: FontWeight.bold)),
                   const Spacer(),
                   Text('${filteredBooks.length} cuốn',
                       style: const TextStyle(color: Colors.grey, fontSize: 13)),
@@ -117,17 +121,30 @@ class _TabDanhMucState extends State<TabDanhMuc> {
                   InkWell(
                     onTap: _openFilterSheet,
                     child: Container(
-                      padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
+                      padding: const EdgeInsets.symmetric(
+                          horizontal: 10, vertical: 6),
                       decoration: BoxDecoration(
-                        color: _currentFilter.hasFilter ? AppColors.primaryBlue : Colors.white,
+                        color: _currentFilter.hasFilter
+                            ? AppColors.primaryBlue
+                            : Colors.white,
                         border: Border.all(color: AppColors.primaryBlue),
                         borderRadius: BorderRadius.circular(20),
                       ),
                       child: Row(
                         children: [
-                          Icon(Icons.filter_alt_outlined, size: 16, color: _currentFilter.hasFilter ? Colors.white : AppColors.primaryBlue),
+                          Icon(Icons.filter_alt_outlined,
+                              size: 16,
+                              color: _currentFilter.hasFilter
+                                  ? Colors.white
+                                  : AppColors.primaryBlue),
                           const SizedBox(width: 4),
-                          Text('Lọc', style: TextStyle(fontSize: 13, fontWeight: FontWeight.bold, color: _currentFilter.hasFilter ? Colors.white : AppColors.primaryBlue)),
+                          Text('Lọc',
+                              style: TextStyle(
+                                  fontSize: 13,
+                                  fontWeight: FontWeight.bold,
+                                  color: _currentFilter.hasFilter
+                                      ? Colors.white
+                                      : AppColors.primaryBlue)),
                         ],
                       ),
                     ),
@@ -137,7 +154,8 @@ class _TabDanhMucState extends State<TabDanhMuc> {
             ),
             Expanded(
               child: filteredBooks.isEmpty
-                  ? const Center(child: Text('Không có sách trong danh mục này'))
+                  ? const Center(
+                      child: Text('Không có sách trong danh mục này'))
                   : RefreshIndicator(
                       color: AppColors.primaryBlue,
                       onRefresh: () async {
@@ -149,8 +167,12 @@ class _TabDanhMucState extends State<TabDanhMuc> {
                         padding: const EdgeInsets.all(12),
                         itemCount: filteredBooks.length,
                         itemBuilder: (context, index) => GestureDetector(
-                          onTap: () => Navigator.push(context, MaterialPageRoute(
-                            builder: (_) => BookDetailScreen(sach: filteredBooks[index], user: widget.user))),
+                          onTap: () => Navigator.push(
+                              context,
+                              MaterialPageRoute(
+                                  builder: (_) => BookDetailScreen(
+                                      sach: filteredBooks[index],
+                                      user: widget.user))),
                           child: _buildBookTile(filteredBooks[index]),
                         ),
                       ),
@@ -199,14 +221,18 @@ class _TabDanhMucState extends State<TabDanhMuc> {
       decoration: BoxDecoration(
         color: Colors.white,
         borderRadius: BorderRadius.circular(12),
-        boxShadow: [BoxShadow(color: Colors.black.withOpacity(0.05), blurRadius: 6)],
+        boxShadow: [
+          BoxShadow(color: Colors.black.withOpacity(0.05), blurRadius: 6)
+        ],
       ),
       child: Row(
         children: [
           ClipRRect(
-            borderRadius: const BorderRadius.horizontal(left: Radius.circular(12)),
+            borderRadius:
+                const BorderRadius.horizontal(left: Radius.circular(12)),
             child: SizedBox(
-              width: 90, height: 120,
+              width: 90,
+              height: 120,
               child: Image.network(
                 '${ApiService.imageUrl}${sach.hinhAnh}',
                 fit: BoxFit.cover,
@@ -224,21 +250,34 @@ class _TabDanhMucState extends State<TabDanhMuc> {
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
                   Text(sach.tenSach,
-                      style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 15),
-                      maxLines: 2, overflow: TextOverflow.ellipsis),
+                      style: const TextStyle(
+                          fontWeight: FontWeight.bold, fontSize: 15),
+                      maxLines: 2,
+                      overflow: TextOverflow.ellipsis),
                   if (sach.tenTacGia != null) ...[
                     const SizedBox(height: 4),
-                    Text(sach.tenTacGia!, style: TextStyle(fontSize: 13, color: Colors.grey[600])),
+                    Text(sach.tenTacGia!,
+                        style:
+                            TextStyle(fontSize: 13, color: Colors.grey[600])),
                   ],
                   const SizedBox(height: 8),
                   if (sach.phanTramGiam > 0) ...[
                     Text('${sach.giaGoc.toStringAsFixed(0)} đ',
-                        style: const TextStyle(fontSize: 12, color: Colors.grey, decoration: TextDecoration.lineThrough)),
+                        style: const TextStyle(
+                            fontSize: 12,
+                            color: Colors.grey,
+                            decoration: TextDecoration.lineThrough)),
                     Text('${sach.giaBanThucTe.toStringAsFixed(0)} đ',
-                        style: const TextStyle(fontSize: 15, color: Colors.red, fontWeight: FontWeight.bold)),
+                        style: const TextStyle(
+                            fontSize: 15,
+                            color: Colors.red,
+                            fontWeight: FontWeight.bold)),
                   ] else
                     Text('${sach.giaGoc.toStringAsFixed(0)} đ',
-                        style: const TextStyle(fontSize: 15, color: AppColors.primaryBlue, fontWeight: FontWeight.bold)),
+                        style: const TextStyle(
+                            fontSize: 15,
+                            color: AppColors.primaryBlue,
+                            fontWeight: FontWeight.bold)),
                 ],
               ),
             ),

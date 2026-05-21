@@ -19,17 +19,20 @@ class GioHangScreen extends StatelessWidget {
 
   void _checkout(BuildContext context, CartProvider cart) {
     if (user == null) {
-      Navigator.push(context, MaterialPageRoute(builder: (_) => const LoginScreen()));
+      Navigator.push(
+          context, MaterialPageRoute(builder: (_) => const LoginScreen()));
       return;
     }
-    
+
     // Nếu có user, tiếp tục thanh toán
-    Navigator.push(context, MaterialPageRoute(
-      builder: (_) => CheckoutScreen(
-        cartItems: cart.items,
-        user: user!,
-      ),
-    ));
+    Navigator.push(
+        context,
+        MaterialPageRoute(
+          builder: (_) => CheckoutScreen(
+            cartItems: cart.items,
+            user: user!,
+          ),
+        ));
   }
 
   @override
@@ -37,7 +40,8 @@ class GioHangScreen extends StatelessWidget {
     return Scaffold(
       backgroundColor: const Color(0xFFF8F9FA),
       appBar: AppBar(
-        title: const Text('Giỏ hàng', style: TextStyle(fontWeight: FontWeight.bold, fontSize: 18)),
+        title: const Text('Giỏ hàng',
+            style: TextStyle(fontWeight: FontWeight.bold, fontSize: 18)),
         backgroundColor: Colors.white,
         foregroundColor: Colors.black87,
         elevation: 0,
@@ -50,11 +54,17 @@ class GioHangScreen extends StatelessWidget {
               child: Column(
                 mainAxisAlignment: MainAxisAlignment.center,
                 children: [
-                  Icon(Icons.shopping_cart_outlined, size: 80, color: Colors.grey[300]),
+                  Icon(Icons.shopping_cart_outlined,
+                      size: 80, color: Colors.grey[300]),
                   const SizedBox(height: 16),
-                  const Text('Giỏ hàng trống', style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold, color: Colors.black87)),
+                  const Text('Giỏ hàng trống',
+                      style: TextStyle(
+                          fontSize: 18,
+                          fontWeight: FontWeight.bold,
+                          color: Colors.black87)),
                   const SizedBox(height: 8),
-                  Text('Hãy thêm sách vào giỏ hàng để mua nhé!', style: TextStyle(color: Colors.grey[600])),
+                  Text('Hãy thêm sách vào giỏ hàng để mua nhé!',
+                      style: TextStyle(color: Colors.grey[600])),
                 ],
               ),
             );
@@ -75,8 +85,11 @@ class GioHangScreen extends StatelessWidget {
                         alignment: Alignment.centerRight,
                         padding: const EdgeInsets.only(right: 20),
                         margin: const EdgeInsets.only(bottom: 12),
-                        decoration: BoxDecoration(color: Colors.red, borderRadius: BorderRadius.circular(12)),
-                        child: const Icon(Icons.delete, color: Colors.white, size: 28),
+                        decoration: BoxDecoration(
+                            color: Colors.red,
+                            borderRadius: BorderRadius.circular(12)),
+                        child: const Icon(Icons.delete,
+                            color: Colors.white, size: 28),
                       ),
                       onDismissed: (direction) {
                         cart.removeItem(item.sach.maSach);
@@ -87,8 +100,13 @@ class GioHangScreen extends StatelessWidget {
                         decoration: BoxDecoration(
                           color: Colors.white,
                           borderRadius: BorderRadius.circular(12),
-                          border: Border.all(color: primaryBlue.withOpacity(0.1)),
-                          boxShadow: [BoxShadow(color: Colors.black.withOpacity(0.02), blurRadius: 6)],
+                          border:
+                              Border.all(color: primaryBlue.withOpacity(0.1)),
+                          boxShadow: [
+                            BoxShadow(
+                                color: Colors.black.withOpacity(0.02),
+                                blurRadius: 6)
+                          ],
                         ),
                         child: Row(
                           crossAxisAlignment: CrossAxisAlignment.start,
@@ -96,11 +114,16 @@ class GioHangScreen extends StatelessWidget {
                             ClipRRect(
                               borderRadius: BorderRadius.circular(8),
                               child: SizedBox(
-                                width: 70, height: 95,
+                                width: 70,
+                                height: 95,
                                 child: CachedNetworkImage(
-                                  imageUrl: '${ApiService.imageUrl}${item.sach.hinhAnh}',
+                                  imageUrl:
+                                      '${ApiService.imageUrl}${item.sach.hinhAnh}',
                                   fit: BoxFit.cover,
-                                  errorWidget: (c, e, s) => Container(color: Colors.grey[100], child: const Icon(Icons.book, color: Colors.grey)),
+                                  errorWidget: (c, e, s) => Container(
+                                      color: Colors.grey[100],
+                                      child: const Icon(Icons.book,
+                                          color: Colors.grey)),
                                 ),
                               ),
                             ),
@@ -110,42 +133,83 @@ class GioHangScreen extends StatelessWidget {
                                 crossAxisAlignment: CrossAxisAlignment.start,
                                 children: [
                                   Row(
-                                    crossAxisAlignment: CrossAxisAlignment.start,
+                                    crossAxisAlignment:
+                                        CrossAxisAlignment.start,
                                     children: [
                                       Expanded(
-                                        child: Text(item.sach.tenSach, style: const TextStyle(fontWeight: FontWeight.w600, fontSize: 14, color: Colors.black87), maxLines: 2, overflow: TextOverflow.ellipsis),
+                                        child: Text(item.sach.tenSach,
+                                            style: const TextStyle(
+                                                fontWeight: FontWeight.w600,
+                                                fontSize: 14,
+                                                color: Colors.black87),
+                                            maxLines: 2,
+                                            overflow: TextOverflow.ellipsis),
                                       ),
                                       IconButton(
-                                        icon: const Icon(Icons.close, size: 18, color: Colors.grey),
+                                        icon: const Icon(Icons.close,
+                                            size: 18, color: Colors.grey),
                                         padding: EdgeInsets.zero,
                                         constraints: const BoxConstraints(),
-                                        onPressed: () => cart.removeItem(item.sach.maSach),
+                                        onPressed: () =>
+                                            cart.removeItem(item.sach.maSach),
                                       ),
                                     ],
                                   ),
                                   const SizedBox(height: 8),
-                                  Text('${_fmt(item.sach.giaBanThucTe)} đ', style: TextStyle(color: primaryBlue, fontWeight: FontWeight.bold, fontSize: 15)),
+                                  Text('${_fmt(item.sach.giaBanThucTe)} đ',
+                                      style: TextStyle(
+                                          color: primaryBlue,
+                                          fontWeight: FontWeight.bold,
+                                          fontSize: 15)),
                                   const SizedBox(height: 8),
                                   Row(
                                     children: [
                                       Container(
-                                        decoration: BoxDecoration(border: Border.all(color: Colors.grey.shade300), borderRadius: BorderRadius.circular(6)),
+                                        decoration: BoxDecoration(
+                                            border: Border.all(
+                                                color: Colors.grey.shade300),
+                                            borderRadius:
+                                                BorderRadius.circular(6)),
                                         child: Row(
                                           children: [
                                             InkWell(
-                                              onTap: () => cart.decreaseQuantity(item.sach.maSach),
-                                              child: Padding(padding: const EdgeInsets.all(6), child: Icon(Icons.remove, size: 16, color: Colors.grey[700])),
+                                              onTap: () =>
+                                                  cart.decreaseQuantity(
+                                                      item.sach.maSach),
+                                              child: Padding(
+                                                  padding:
+                                                      const EdgeInsets.all(6),
+                                                  child: Icon(Icons.remove,
+                                                      size: 16,
+                                                      color: Colors.grey[700])),
                                             ),
-                                            Container(width: 30, alignment: Alignment.center, child: Text('${item.soLuong}', style: const TextStyle(fontWeight: FontWeight.w600))),
+                                            Container(
+                                                width: 30,
+                                                alignment: Alignment.center,
+                                                child: Text('${item.soLuong}',
+                                                    style: const TextStyle(
+                                                        fontWeight:
+                                                            FontWeight.w600))),
                                             InkWell(
-                                              onTap: () => cart.addItem(item.sach),
-                                              child: Padding(padding: const EdgeInsets.all(6), child: Icon(Icons.add, size: 16, color: Colors.grey[700])),
+                                              onTap: () =>
+                                                  cart.addItem(item.sach),
+                                              child: Padding(
+                                                  padding:
+                                                      const EdgeInsets.all(6),
+                                                  child: Icon(Icons.add,
+                                                      size: 16,
+                                                      color: Colors.grey[700])),
                                             ),
                                           ],
                                         ),
                                       ),
                                       const Spacer(),
-                                      Text('=${_fmt(item.sach.giaBanThucTe * item.soLuong)} đ', style: TextStyle(fontSize: 13, color: Colors.grey[600], fontWeight: FontWeight.w500)),
+                                      Text(
+                                          '=${_fmt(item.sach.giaBanThucTe * item.soLuong)} đ',
+                                          style: TextStyle(
+                                              fontSize: 13,
+                                              color: Colors.grey[600],
+                                              fontWeight: FontWeight.w500)),
                                     ],
                                   ),
                                 ],
@@ -160,10 +224,16 @@ class GioHangScreen extends StatelessWidget {
               ),
               // Tổng tiền & nút đặt hàng
               Container(
-                padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+                padding:
+                    const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
                 decoration: BoxDecoration(
                   color: Colors.white,
-                  boxShadow: [BoxShadow(color: Colors.black.withOpacity(0.05), blurRadius: 10, offset: const Offset(0, -5))],
+                  boxShadow: [
+                    BoxShadow(
+                        color: Colors.black.withOpacity(0.05),
+                        blurRadius: 10,
+                        offset: const Offset(0, -5))
+                  ],
                 ),
                 child: SafeArea(
                   child: Row(
@@ -171,8 +241,14 @@ class GioHangScreen extends StatelessWidget {
                       Column(
                         crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
-                          const Text('Tổng cộng:', style: TextStyle(color: Colors.black54, fontSize: 13)),
-                          Text('${_fmt(cart.totalAmount)} đ', style: TextStyle(fontSize: 22, fontWeight: FontWeight.bold, color: primaryBlue)),
+                          const Text('Tổng cộng:',
+                              style: TextStyle(
+                                  color: Colors.black54, fontSize: 13)),
+                          Text('${_fmt(cart.totalAmount)} đ',
+                              style: TextStyle(
+                                  fontSize: 22,
+                                  fontWeight: FontWeight.bold,
+                                  color: primaryBlue)),
                         ],
                       ),
                       const Spacer(),
@@ -181,11 +257,15 @@ class GioHangScreen extends StatelessWidget {
                         style: ElevatedButton.styleFrom(
                           backgroundColor: primaryBlue,
                           foregroundColor: Colors.white,
-                          padding: const EdgeInsets.symmetric(horizontal: 32, vertical: 14),
-                          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
+                          padding: const EdgeInsets.symmetric(
+                              horizontal: 32, vertical: 14),
+                          shape: RoundedRectangleBorder(
+                              borderRadius: BorderRadius.circular(8)),
                           elevation: 0,
                         ),
-                        child: const Text('Thanh toán', style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold)),
+                        child: const Text('Thanh toán',
+                            style: TextStyle(
+                                fontSize: 16, fontWeight: FontWeight.bold)),
                       ),
                     ],
                   ),

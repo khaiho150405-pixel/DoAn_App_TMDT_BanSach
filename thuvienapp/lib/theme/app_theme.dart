@@ -4,16 +4,16 @@ class AppColors {
   static const Color primaryBlue = Color(0xFF1D77F3);
   static const Color backgroundWhite = Colors.white;
   static const Color backgroundLight = Color(0xFFF8F9FA); // Nền phụ rất nhạt
-  
+
   // Hover & Light background
   static const Color blueLight = Color(0xFFEAF3FF);
   static const Color blueHover = Color(0xFFDCEBFF);
-  
+
   // Text colors
   static const Color textMain = Colors.black87;
   static const Color textSecondary = Colors.black54;
   static const Color textHint = Colors.grey;
-  
+
   // Borders
   static const Color borderLight = Color(0xFFEEEEEE);
 }

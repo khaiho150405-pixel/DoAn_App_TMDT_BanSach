@@ -1,12 +1,10 @@
 class User {
-  final int maTaiKhoan;   // ID tài khoản dùng để đăng nhập
+  final int maTaiKhoan;
   final String tenDangNhap;
-  final int roleId;       // 1: Admin, 2: Bán hàng, 3: Kho, 4: Khách hàng
+  final int roleId;
   final String? roleName;
-  final int realId;       // QUAN TRỌNG: Đây là MaKH (nếu là khách) hoặc MaNV (nếu là nhân viên)
-  final String fullName;  // Tên hiển thị trên app
-  
-  // Các field mới thêm
+  final int realId;
+  final String fullName;
   final String? email;
   final String? soDienThoai;
   final String? diaChiMacDinh;
@@ -29,10 +27,10 @@ class User {
       tenDangNhap: json['tenDangNhap'] ?? '',
       roleId: json['roleId'] ?? 4,
       roleName: json['roleName'],
-      realId: json['realId'] ?? json['maKh'] ?? 0, // Fallback nếu API trả về maKh
-      fullName: json['fullName'] ?? json['hoVaTen'] ?? 'Người dùng', // Fallback hoVaTen
+      realId: json['realId'] ?? json['maKh'] ?? json['maNV'] ?? 0,
+      fullName: json['fullName'] ?? json['hoVaTen'] ?? 'Nguoi dung',
       email: json['email'],
-      soDienThoai: json['soDienThoai'] ?? json['sdt'], // Support sdt
+      soDienThoai: json['soDienThoai'] ?? json['sdt'],
       diaChiMacDinh: json['diaChiMacDinh'],
     );
   }

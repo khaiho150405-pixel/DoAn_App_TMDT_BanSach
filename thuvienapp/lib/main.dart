@@ -1,23 +1,26 @@
 import 'package:flutter/material.dart';
-import 'package:provider/provider.dart';
 import 'package:flutter_dotenv/flutter_dotenv.dart';
-import 'package:thuvienapp/screens/login_screen.dart';
+import 'package:provider/provider.dart';
 
-// 1. Thay đổi import từ login_screen sang home_screen để test trực tiếp
-import 'screens/KhachHang/home_screen.dart';
-import 'providers/user_provider.dart';
+import 'providers/admin_user_provider.dart';
 import 'providers/cart_provider.dart';
+import 'providers/dashboard_provider.dart';
 import 'providers/order_provider.dart';
+import 'providers/promotion_provider.dart';
+import 'providers/user_provider.dart';
+import 'screens/admin/admin_main_screen.dart';
+import 'screens/login_screen.dart';
 import 'theme/app_theme.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
 
   try {
-    await dotenv.load(fileName: ".env");
+    await dotenv.load(fileName: '.env');
   } catch (e) {
-    print(
-        "Không tìm thấy file .env. Hãy tạo file .env ở thư mục gốc và thêm GEMINI_API_KEY vào đó.");
+    debugPrint(
+      'Missing .env file. Add it at the Flutter project root if needed.',
+    );
   }
 
   runApp(
@@ -26,6 +29,9 @@ void main() async {
         ChangeNotifierProvider(create: (_) => UserProvider()),
         ChangeNotifierProvider(create: (_) => CartProvider()),
         ChangeNotifierProvider(create: (_) => OrderProvider()),
+        ChangeNotifierProvider(create: (_) => DashboardProvider()),
+        ChangeNotifierProvider(create: (_) => AdminUserProvider()),
+        ChangeNotifierProvider(create: (_) => PromotionProvider()),
       ],
       child: const MyApp(),
     ),
@@ -41,8 +47,10 @@ class MyApp extends StatelessWidget {
       debugShowCheckedModeBanner: false,
       title: 'E-BookStore Test',
       theme: AppTheme.lightTheme,
-      // 2. Sửa thuộc tính home này thành HomeScreen để khởi chạy thẳng vào trang chủ
       home: const LoginScreen(),
+      routes: {
+        '/admin-dashboard': (_) => const AdminMainScreen(),
+      },
     );
   }
 }

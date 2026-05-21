@@ -129,7 +129,11 @@ class _FilterBottomSheetState extends State<FilterBottomSheet> {
           Row(
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: [
-              const Text('Lọc Sách', style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold, color: AppColors.primaryBlue)),
+              const Text('Lọc Sách',
+                  style: TextStyle(
+                      fontSize: 20,
+                      fontWeight: FontWeight.bold,
+                      color: AppColors.primaryBlue)),
               IconButton(
                 icon: const Icon(Icons.close),
                 onPressed: () => Navigator.pop(context),
@@ -137,23 +141,28 @@ class _FilterBottomSheetState extends State<FilterBottomSheet> {
             ],
           ),
           const Divider(),
-          
+
           Expanded(
             child: _isLoading
-                ? const Center(child: CircularProgressIndicator(color: AppColors.primaryBlue))
+                ? const Center(
+                    child:
+                        CircularProgressIndicator(color: AppColors.primaryBlue))
                 : SingleChildScrollView(
                     child: Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
                         const SizedBox(height: 16),
                         // Khoảng giá
-                        const Text('Mức giá', style: TextStyle(fontWeight: FontWeight.bold, fontSize: 16)),
+                        const Text('Mức giá',
+                            style: TextStyle(
+                                fontWeight: FontWeight.bold, fontSize: 16)),
                         const SizedBox(height: 12),
                         Wrap(
                           spacing: 8,
                           runSpacing: 12,
                           children: _priceRanges.map((range) {
-                            final isSelected = _minPrice == range['min'] && _maxPrice == range['max'];
+                            final isSelected = _minPrice == range['min'] &&
+                                _maxPrice == range['max'];
                             return _buildChip(
                               range['label'],
                               isSelected,
@@ -174,10 +183,13 @@ class _FilterBottomSheetState extends State<FilterBottomSheet> {
                         const SizedBox(height: 24),
 
                         // Tác giả
-                        const Text('Tác giả', style: TextStyle(fontWeight: FontWeight.bold, fontSize: 16)),
+                        const Text('Tác giả',
+                            style: TextStyle(
+                                fontWeight: FontWeight.bold, fontSize: 16)),
                         const SizedBox(height: 12),
                         if (_authors.isEmpty)
-                          const Text('Không có dữ liệu', style: TextStyle(color: Colors.grey))
+                          const Text('Không có dữ liệu',
+                              style: TextStyle(color: Colors.grey))
                         else
                           Wrap(
                             spacing: 8,
@@ -189,7 +201,8 @@ class _FilterBottomSheetState extends State<FilterBottomSheet> {
                                 isSelected,
                                 () {
                                   setState(() {
-                                    _selectedAuthor = isSelected ? null : author;
+                                    _selectedAuthor =
+                                        isSelected ? null : author;
                                   });
                                 },
                               );
@@ -198,10 +211,13 @@ class _FilterBottomSheetState extends State<FilterBottomSheet> {
                         const SizedBox(height: 24),
 
                         // Nhà xuất bản
-                        const Text('Nhà xuất bản', style: TextStyle(fontWeight: FontWeight.bold, fontSize: 16)),
+                        const Text('Nhà xuất bản',
+                            style: TextStyle(
+                                fontWeight: FontWeight.bold, fontSize: 16)),
                         const SizedBox(height: 12),
                         if (_publishers.isEmpty)
-                          const Text('Không có dữ liệu', style: TextStyle(color: Colors.grey))
+                          const Text('Không có dữ liệu',
+                              style: TextStyle(color: Colors.grey))
                         else
                           Wrap(
                             spacing: 8,
@@ -213,7 +229,8 @@ class _FilterBottomSheetState extends State<FilterBottomSheet> {
                                 isSelected,
                                 () {
                                   setState(() {
-                                    _selectedPublisher = isSelected ? null : pub;
+                                    _selectedPublisher =
+                                        isSelected ? null : pub;
                                   });
                                 },
                               );
@@ -237,9 +254,11 @@ class _FilterBottomSheetState extends State<FilterBottomSheet> {
                       foregroundColor: AppColors.primaryBlue,
                       side: const BorderSide(color: AppColors.primaryBlue),
                       padding: const EdgeInsets.symmetric(vertical: 14),
-                      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+                      shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(12)),
                     ),
-                    child: const Text('Đặt lại', style: TextStyle(fontWeight: FontWeight.bold)),
+                    child: const Text('Đặt lại',
+                        style: TextStyle(fontWeight: FontWeight.bold)),
                   ),
                 ),
                 const SizedBox(width: 16),
@@ -250,9 +269,11 @@ class _FilterBottomSheetState extends State<FilterBottomSheet> {
                       backgroundColor: AppColors.primaryBlue,
                       foregroundColor: Colors.white,
                       padding: const EdgeInsets.symmetric(vertical: 14),
-                      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+                      shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(12)),
                     ),
-                    child: const Text('Áp dụng', style: TextStyle(fontWeight: FontWeight.bold)),
+                    child: const Text('Áp dụng',
+                        style: TextStyle(fontWeight: FontWeight.bold)),
                   ),
                 ),
               ],

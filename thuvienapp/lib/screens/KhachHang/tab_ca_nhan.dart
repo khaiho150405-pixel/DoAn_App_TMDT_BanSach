@@ -1,7 +1,5 @@
 import 'package:flutter/material.dart';
-import 'package:provider/provider.dart';
 import '../../models/user.dart';
-import '../../providers/user_provider.dart';
 import '../login_screen.dart';
 import 'home_screen.dart';
 import 'my_orders_screen.dart';
@@ -30,14 +28,19 @@ class TabCaNhan extends StatelessWidget {
             backgroundColor: AppColors.primaryBlue,
             child: Text(
               _getAvatarLetter(user!.fullName),
-              style: const TextStyle(fontSize: 36, color: Colors.white, fontWeight: FontWeight.bold),
+              style: const TextStyle(
+                  fontSize: 36,
+                  color: Colors.white,
+                  fontWeight: FontWeight.bold),
             ),
           ),
           const SizedBox(height: 16),
           Text(user!.fullName,
-              style: const TextStyle(fontSize: 22, fontWeight: FontWeight.bold)),
+              style:
+                  const TextStyle(fontSize: 22, fontWeight: FontWeight.bold)),
           const SizedBox(height: 4),
-          Text(user!.tenDangNhap, style: TextStyle(fontSize: 14, color: Colors.grey[600])),
+          Text(user!.tenDangNhap,
+              style: TextStyle(fontSize: 14, color: Colors.grey[600])),
           const SizedBox(height: 8),
           Container(
             padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 4),
@@ -46,15 +49,19 @@ class TabCaNhan extends StatelessWidget {
               borderRadius: BorderRadius.circular(12),
             ),
             child: Text(user!.roleName ?? 'Khách hàng',
-                style: const TextStyle(color: AppColors.primaryBlue, fontSize: 13)),
+                style: const TextStyle(
+                    color: AppColors.primaryBlue, fontSize: 13)),
           ),
           const SizedBox(height: 30),
 
           // Danh sách menu
-          _buildMenuItem(context, Icons.shopping_bag_outlined, 'Đơn hàng của tôi', () {
-            Navigator.push(context, MaterialPageRoute(builder: (_) => MyOrdersScreen(user: user!)));
+          _buildMenuItem(
+              context, Icons.shopping_bag_outlined, 'Đơn hàng của tôi', () {
+            Navigator.push(context,
+                MaterialPageRoute(builder: (_) => MyOrdersScreen(user: user!)));
           }),
-          _buildMenuItem(context, Icons.location_on_outlined, 'Địa chỉ giao hàng', () {
+          _buildMenuItem(
+              context, Icons.location_on_outlined, 'Địa chỉ giao hàng', () {
             ScaffoldMessenger.of(context).showSnackBar(
                 const SnackBar(content: Text('Tính năng đang phát triển')));
           }),
@@ -87,11 +94,13 @@ class TabCaNhan extends StatelessWidget {
                 );
               },
               icon: const Icon(Icons.logout, color: Colors.red),
-              label: const Text('Đăng xuất', style: TextStyle(color: Colors.red, fontSize: 16)),
+              label: const Text('Đăng xuất',
+                  style: TextStyle(color: Colors.red, fontSize: 16)),
               style: OutlinedButton.styleFrom(
                 side: const BorderSide(color: Colors.red),
                 padding: const EdgeInsets.symmetric(vertical: 14),
-                shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+                shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(12)),
               ),
             ),
           ),
@@ -101,13 +110,16 @@ class TabCaNhan extends StatelessWidget {
     );
   }
 
-  Widget _buildMenuItem(BuildContext context, IconData icon, String title, VoidCallback onTap) {
+  Widget _buildMenuItem(
+      BuildContext context, IconData icon, String title, VoidCallback onTap) {
     return Container(
       margin: const EdgeInsets.only(bottom: 8),
       decoration: BoxDecoration(
         color: Colors.white,
         borderRadius: BorderRadius.circular(12),
-        boxShadow: [BoxShadow(color: Colors.black.withOpacity(0.03), blurRadius: 4)],
+        boxShadow: [
+          BoxShadow(color: Colors.black.withOpacity(0.03), blurRadius: 4)
+        ],
       ),
       child: ListTile(
         leading: Icon(icon, color: AppColors.primaryBlue),

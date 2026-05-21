@@ -104,7 +104,8 @@ class _TabTrangChuState extends State<TabTrangChu> {
 
                 // --- SÁCH KHUYẾN MÃI ---
                 if (discountedBooks.isNotEmpty) ...[
-                  _buildSectionTitle('🔥 Khuyến mãi hot', Icons.local_fire_department),
+                  _buildSectionTitle(
+                      '🔥 Khuyến mãi hot', Icons.local_fire_department),
                   SizedBox(
                     height: 280,
                     child: ListView.builder(
@@ -113,9 +114,14 @@ class _TabTrangChuState extends State<TabTrangChu> {
                       itemCount: discountedBooks.length,
                       itemBuilder: (context, index) {
                         return GestureDetector(
-                          onTap: () => Navigator.push(context, MaterialPageRoute(
-                            builder: (_) => BookDetailScreen(sach: discountedBooks[index], user: widget.user))),
-                          child: _BookCardHorizontal(sach: discountedBooks[index]),
+                          onTap: () => Navigator.push(
+                              context,
+                              MaterialPageRoute(
+                                  builder: (_) => BookDetailScreen(
+                                      sach: discountedBooks[index],
+                                      user: widget.user))),
+                          child:
+                              _BookCardHorizontal(sach: discountedBooks[index]),
                         );
                       },
                     ),
@@ -128,8 +134,7 @@ class _TabTrangChuState extends State<TabTrangChu> {
                   shrinkWrap: true,
                   physics: const NeverScrollableScrollPhysics(),
                   padding: const EdgeInsets.all(12),
-                  gridDelegate:
-                      const SliverGridDelegateWithFixedCrossAxisCount(
+                  gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
                     crossAxisCount: 2,
                     childAspectRatio: 0.65,
                     crossAxisSpacing: 12,
@@ -138,8 +143,11 @@ class _TabTrangChuState extends State<TabTrangChu> {
                   itemCount: books.length,
                   itemBuilder: (context, index) {
                     return GestureDetector(
-                      onTap: () => Navigator.push(context, MaterialPageRoute(
-                        builder: (_) => BookDetailScreen(sach: books[index], user: widget.user))),
+                      onTap: () => Navigator.push(
+                          context,
+                          MaterialPageRoute(
+                              builder: (_) => BookDetailScreen(
+                                  sach: books[index], user: widget.user))),
                       child: _BookCardGrid(sach: books[index]),
                     );
                   },
@@ -197,7 +205,8 @@ class _TabTrangChuState extends State<TabTrangChu> {
               ],
             ),
           ),
-          Icon(Icons.auto_stories, size: 60, color: AppColors.primaryBlue.withOpacity(0.8)),
+          Icon(Icons.auto_stories,
+              size: 60, color: AppColors.primaryBlue.withOpacity(0.8)),
         ],
       ),
     );
@@ -263,13 +272,12 @@ class _BookCardHorizontal extends StatelessWidget {
                     loadingBuilder: (context, child, loadingProgress) {
                       if (loadingProgress == null) return child;
                       return const Center(
-                          child:
-                              CircularProgressIndicator(strokeWidth: 2));
+                          child: CircularProgressIndicator(strokeWidth: 2));
                     },
                     errorBuilder: (context, error, stackTrace) => Container(
                       color: Colors.grey[200],
-                      child: const Icon(Icons.book,
-                          size: 50, color: Colors.grey),
+                      child:
+                          const Icon(Icons.book, size: 50, color: Colors.grey),
                     ),
                   ),
                   // Nhãn giảm giá
@@ -385,13 +393,12 @@ class _BookCardGrid extends StatelessWidget {
                     loadingBuilder: (context, child, loadingProgress) {
                       if (loadingProgress == null) return child;
                       return const Center(
-                          child:
-                              CircularProgressIndicator(strokeWidth: 2));
+                          child: CircularProgressIndicator(strokeWidth: 2));
                     },
                     errorBuilder: (context, error, stackTrace) => Container(
                       color: Colors.grey[300],
-                      child: const Icon(Icons.book,
-                          size: 50, color: Colors.grey),
+                      child:
+                          const Icon(Icons.book, size: 50, color: Colors.grey),
                     ),
                   ),
                   // Nhãn giảm giá

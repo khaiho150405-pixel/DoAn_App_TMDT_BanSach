@@ -135,8 +135,7 @@ class _HomeScreenState extends State<HomeScreen> {
                 onTap: () {
                   Navigator.push(
                     context,
-                    MaterialPageRoute(
-                        builder: (_) => const TimKiemScreen()),
+                    MaterialPageRoute(builder: (_) => const TimKiemScreen()),
                   );
                 },
                 child: Container(
@@ -219,8 +218,7 @@ class _HomeScreenState extends State<HomeScreen> {
                       Navigator.push(
                         context,
                         MaterialPageRoute(
-                            builder: (_) =>
-                                GioHangScreen(user: widget.user!)),
+                            builder: (_) => GioHangScreen(user: widget.user!)),
                       );
                     }
                   },
@@ -240,8 +238,8 @@ class _HomeScreenState extends State<HomeScreen> {
                           decoration: BoxDecoration(
                               color: Colors.red,
                               borderRadius: BorderRadius.circular(10)),
-                          constraints: const BoxConstraints(
-                              minWidth: 16, minHeight: 16),
+                          constraints:
+                              const BoxConstraints(minWidth: 16, minHeight: 16),
                           child: Text('${cart.itemCount}',
                               style: const TextStyle(
                                   color: Colors.white, fontSize: 10),

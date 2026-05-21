@@ -23,7 +23,8 @@ class _NotificationScreenState extends State<NotificationScreen> {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: const Text('Thông báo', style: TextStyle(fontWeight: FontWeight.bold)),
+        title: const Text('Thông báo',
+            style: TextStyle(fontWeight: FontWeight.bold)),
         backgroundColor: AppColors.primaryBlue,
         foregroundColor: Colors.white,
         elevation: 0,
@@ -32,7 +33,8 @@ class _NotificationScreenState extends State<NotificationScreen> {
         future: _futureNotifications,
         builder: (context, snapshot) {
           if (snapshot.connectionState == ConnectionState.waiting) {
-            return const Center(child: CircularProgressIndicator(color: AppColors.primaryBlue));
+            return const Center(
+                child: CircularProgressIndicator(color: AppColors.primaryBlue));
           }
           if (snapshot.hasError) {
             return Center(
@@ -41,7 +43,8 @@ class _NotificationScreenState extends State<NotificationScreen> {
                 children: [
                   Icon(Icons.error_outline, size: 60, color: Colors.grey[400]),
                   const SizedBox(height: 16),
-                  const Text('Không thể tải thông báo', style: TextStyle(color: Colors.grey)),
+                  const Text('Không thể tải thông báo',
+                      style: TextStyle(color: Colors.grey)),
                 ],
               ),
             );
@@ -51,7 +54,8 @@ class _NotificationScreenState extends State<NotificationScreen> {
               child: Column(
                 mainAxisAlignment: MainAxisAlignment.center,
                 children: [
-                  Icon(Icons.notifications_off_outlined, size: 60, color: Colors.grey[300]),
+                  Icon(Icons.notifications_off_outlined,
+                      size: 60, color: Colors.grey[300]),
                   const SizedBox(height: 16),
                   const Text('Chưa có thông báo mới',
                       style: TextStyle(fontSize: 16, color: Colors.grey)),
@@ -69,17 +73,20 @@ class _NotificationScreenState extends State<NotificationScreen> {
             itemBuilder: (context, index) {
               final noti = notifications[index];
               return Container(
-                padding: const EdgeInsets.symmetric(vertical: 12, horizontal: 8),
+                padding:
+                    const EdgeInsets.symmetric(vertical: 12, horizontal: 8),
                 child: Row(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
                     Container(
-                      width: 44, height: 44,
+                      width: 44,
+                      height: 44,
                       decoration: BoxDecoration(
                         color: AppColors.primaryBlue.withOpacity(0.1),
                         borderRadius: BorderRadius.circular(12),
                       ),
-                      child: const Icon(Icons.auto_stories, color: AppColors.primaryBlue, size: 22),
+                      child: const Icon(Icons.auto_stories,
+                          color: AppColors.primaryBlue, size: 22),
                     ),
                     const SizedBox(width: 12),
                     Expanded(
@@ -88,14 +95,20 @@ class _NotificationScreenState extends State<NotificationScreen> {
                         children: [
                           Text(
                             noti['title'] ?? noti['tenSach'] ?? 'Thông báo mới',
-                            style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 14),
-                            maxLines: 2, overflow: TextOverflow.ellipsis,
+                            style: const TextStyle(
+                                fontWeight: FontWeight.bold, fontSize: 14),
+                            maxLines: 2,
+                            overflow: TextOverflow.ellipsis,
                           ),
                           const SizedBox(height: 4),
                           Text(
-                            noti['message'] ?? noti['moTa'] ?? 'Sách mới đã có trên kệ!',
-                            style: TextStyle(fontSize: 13, color: Colors.grey[600]),
-                            maxLines: 2, overflow: TextOverflow.ellipsis,
+                            noti['message'] ??
+                                noti['moTa'] ??
+                                'Sách mới đã có trên kệ!',
+                            style: TextStyle(
+                                fontSize: 13, color: Colors.grey[600]),
+                            maxLines: 2,
+                            overflow: TextOverflow.ellipsis,
                           ),
                         ],
                       ),

@@ -94,7 +94,7 @@ namespace BookStoreAPI.Repositories
                 var order = await _context.Donhangs
                     .Include(o => o.Chitietdonhangs)
                     .FirstOrDefaultAsync(o => o.Madh == orderId);
-                
+
                 if (order == null || order.Trangthaidonhang != "Chờ xác nhận")
                     return false;
 
@@ -106,7 +106,7 @@ namespace BookStoreAPI.Repositories
                     if (sach != null)
                     {
                         sach.Soluongton -= detail.Soluong;
-                        
+
                         if (sach.Soluongton < 0) sach.Soluongton = 0;
                     }
                 }

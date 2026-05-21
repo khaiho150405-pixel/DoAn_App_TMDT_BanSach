@@ -8,11 +8,13 @@ class OrderService {
 
   Future<OrderModel> checkout(Map<String, dynamic> requestBody) async {
     try {
-      final response = await http.post(
-        Uri.parse('$_baseUrl/Checkout'),
-        headers: {'Content-Type': 'application/json'},
-        body: json.encode(requestBody),
-      ).timeout(const Duration(seconds: 15));
+      final response = await http
+          .post(
+            Uri.parse('$_baseUrl/Checkout'),
+            headers: {'Content-Type': 'application/json'},
+            body: json.encode(requestBody),
+          )
+          .timeout(const Duration(seconds: 15));
 
       if (response.body.isEmpty) {
         throw Exception('API trả về dữ liệu rỗng (Không có phản hồi).');
@@ -35,9 +37,11 @@ class OrderService {
 
   Future<List<OrderModel>> getOrdersByCustomer(int customerId) async {
     try {
-      final response = await http.get(
-        Uri.parse('$_baseUrl/Customer/$customerId'),
-      ).timeout(const Duration(seconds: 15));
+      final response = await http
+          .get(
+            Uri.parse('$_baseUrl/Customer/$customerId'),
+          )
+          .timeout(const Duration(seconds: 15));
 
       if (response.body.isEmpty) {
         throw Exception('API trả về dữ liệu rỗng.');
@@ -61,9 +65,11 @@ class OrderService {
 
   Future<OrderModel> getOrderDetail(int orderId) async {
     try {
-      final response = await http.get(
-        Uri.parse('$_baseUrl/$orderId'),
-      ).timeout(const Duration(seconds: 15));
+      final response = await http
+          .get(
+            Uri.parse('$_baseUrl/$orderId'),
+          )
+          .timeout(const Duration(seconds: 15));
 
       if (response.body.isEmpty) {
         throw Exception('API trả về dữ liệu rỗng.');
@@ -86,9 +92,11 @@ class OrderService {
 
   Future<bool> cancelOrder(int orderId) async {
     try {
-      final response = await http.put(
-        Uri.parse('$_baseUrl/cancel/$orderId'),
-      ).timeout(const Duration(seconds: 15));
+      final response = await http
+          .put(
+            Uri.parse('$_baseUrl/cancel/$orderId'),
+          )
+          .timeout(const Duration(seconds: 15));
 
       final data = json.decode(response.body);
 
