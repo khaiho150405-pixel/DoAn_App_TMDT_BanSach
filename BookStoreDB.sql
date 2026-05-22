@@ -203,20 +203,85 @@ CREATE TABLE CHITIETPHIEUNHAP (
 GO
 
 -- =========================================================
--- 8. TƯƠNG TÁC (ĐÁNH GIÁ SÁCH, HỎI ĐÁP)
+-- TẠO BẢNG HOIDAP
 -- =========================================================
 CREATE TABLE HOIDAP (
     MAHOIDAP INT IDENTITY(1,1) PRIMARY KEY,
-    MAKH INT NOT NULL,
-    CAUHOI NVARCHAR(MAX) NOT NULL,
-    TRALOI NVARCHAR(MAX),
-    MANV INT NULL, 
-    THOIGIANHOI DATETIME DEFAULT GETDATE(),
-    THOIGIANTRALOI DATETIME,
-    TRANGTHAI NVARCHAR(50) DEFAULT N'Chờ trả lời',
 
-    CONSTRAINT FK_HOIDAP_KH FOREIGN KEY (MAKH) REFERENCES KHACHHANG(MAKH),
-    CONSTRAINT FK_HOIDAP_NV FOREIGN KEY (MANV) REFERENCES NHANVIEN(MANV)
+    MAKH INT NOT NULL,
+
+    TIEUDE NVARCHAR(255) NOT NULL,
+
+    NOIDUNG NVARCHAR(MAX) NOT NULL,
+
+    LOAIHOTRO NVARCHAR(50) DEFAULT N'Khác',
+
+    TRANGTHAI NVARCHAR(50) DEFAULT N'Chờ trả lời'
+    CHECK (
+        TRANGTHAI IN (
+            N'Chờ trả lời',
+            N'Đang xử lý',
+            N'Đã trả lời',
+            N'Đã đóng'
+        )
+    ),
+
+    THOIGIANTAO DATETIME DEFAULT GETDATE(),
+
+    CAPNHATCUOI DATETIME DEFAULT GETDATE(),
+
+    MANVPHUTRACH INT NULL,
+
+    CONSTRAINT FK_HOIDAP_KHACHHANG
+        FOREIGN KEY (MAKH)
+        REFERENCES KHACHHANG(MAKH),
+
+    CONSTRAINT FK_HOIDAP_NHANVIEN
+        FOREIGN KEY (MANVPHUTRACH)
+        REFERENCES NHANVIEN(MANV)
+);
+GO
+
+
+-- =========================================================
+-- TẠO BẢNG TINNHANHOTRO
+-- =========================================================
+CREATE TABLE TINNHANHOTRO (
+    MATINNHAN INT IDENTITY(1,1) PRIMARY KEY,
+
+    MAHOIDAP INT NOT NULL,
+
+    NGUOIGUI NVARCHAR(20) NOT NULL
+    CHECK (
+        NGUOIGUI IN (
+            N'KHACHHANG',
+            N'NHANVIEN'
+        )
+    ),
+
+    MAKH INT NULL,
+
+    MANV INT NULL,
+
+    NOIDUNG NVARCHAR(MAX) NOT NULL,
+
+    HINHANH VARCHAR(255) NULL,
+
+    DAXEM BIT DEFAULT 0,
+
+    THOIGIAN DATETIME DEFAULT GETDATE(),
+
+    CONSTRAINT FK_TINNHAN_HOIDAP
+        FOREIGN KEY (MAHOIDAP)
+        REFERENCES HOIDAP(MAHOIDAP),
+
+    CONSTRAINT FK_TINNHAN_KHACHHANG
+        FOREIGN KEY (MAKH)
+        REFERENCES KHACHHANG(MAKH),
+
+    CONSTRAINT FK_TINNHAN_NHANVIEN
+        FOREIGN KEY (MANV)
+        REFERENCES NHANVIEN(MANV)
 );
 GO
 
@@ -436,4 +501,22 @@ INSERT INTO SACH (TENSACH, MATG, MANXB, MATHELOAI, MAKM, HINHANH, MOTA, GIABAN, 
 (N'Conan Tập 100', 4, 2, 5, NULL, 'conan_100.jpg', N'Cột mốc lịch sử với những vụ án hóc búa và những manh mối quan trọng về Tổ chức Áo đen bí ẩn.', 35000, 150),
 (N'Conan Tập 99', 4, 2, 5, NULL, 'conan_99.jpg', N'Thám tử nhí Conan tiếp tục phô diễn tài năng suy luận đỉnh cao để vạch trần bộ mặt của những kẻ thủ ác.', 35000, 120),
 (N'Conan Tập 1', 4, 2, 5, NULL, 'conan_1.jpg', N'Khởi đầu vụ án tại công viên giải trí khiến thám tử Kudo Shinichi bị teo nhỏ thành Edogawa Conan.', 20000, 600);
+GO
+
+-- =========================================================
+-- TRIGGER CẬP NHẬT THỜI GIAN CHAT CUỐI
+-- =========================================================
+CREATE TRIGGER TG_CAPNHAT_HOIDAP_LASTUPDATE
+ON TINNHANHOTRO
+AFTER INSERT
+AS
+BEGIN
+    SET NOCOUNT ON;
+
+    UPDATE HD
+    SET HD.CAPNHATCUOI = GETDATE()
+    FROM HOIDAP HD
+    INNER JOIN inserted I
+        ON HD.MAHOIDAP = I.MAHOIDAP;
+END;
 GO
