@@ -1,21 +1,21 @@
 import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
-import '../../models/ho_dap.dart';
+import 'package:provider/provider.dart';
 import '../../models/tin_nhan_ho_tro.dart';
-import '../../models/user.dart';
 import '../../providers/api_service.dart';
+import '../../providers/user_provider.dart';
 
-class SupportChatScreen extends StatefulWidget {
-  final HoiDap ticket;
-  final User user;
-  const SupportChatScreen({super.key, required this.ticket, required this.user});
+class SaleSupportChatScreen extends StatefulWidget {
+  final Map<String, dynamic> ticket;
+  const SaleSupportChatScreen({super.key, required this.ticket});
 
   @override
-  State<SupportChatScreen> createState() => _SupportChatScreenState();
+  State<SaleSupportChatScreen> createState() => _SaleSupportChatScreenState();
 }
 
-class _SupportChatScreenState extends State<SupportChatScreen> {
+class _SaleSupportChatScreenState extends State<SaleSupportChatScreen>
+    with TickerProviderStateMixin {
   final ApiService _api = ApiService();
   final List<TinNhanHoTro> _messages = [];
   final ScrollController _scrollController = ScrollController();
@@ -26,12 +26,16 @@ class _SupportChatScreenState extends State<SupportChatScreen> {
   Timer? _pollingTimer;
   String _currentStatus = 'Chờ trả lời';
 
+  int get _maHoiDap => widget.ticket['mahoidap'] ?? 0;
+  String get _tenKH => widget.ticket['tenKhachHang'] ?? 'Khách hàng';
+  String get _tieuDe =>
+      widget.ticket['tieude'] ?? widget.ticket['cauhoi'] ?? 'Hỗ trợ';
+
   @override
   void initState() {
     super.initState();
-    _currentStatus = widget.ticket.trangThai;
+    _currentStatus = widget.ticket['trangthai'] ?? 'Chờ trả lời';
     _loadMessages(initial: true);
-    // Start periodic polling every 4 seconds to fetch new messages automatically
     _pollingTimer = Timer.periodic(
         const Duration(seconds: 4), (_) => _loadMessages(initial: false));
   }
@@ -45,14 +49,12 @@ class _SupportChatScreenState extends State<SupportChatScreen> {
   }
 
   Future<void> _loadMessages({required bool initial}) async {
-    if (initial) {
-      setState(() => _isLoading = true);
-    }
+    if (initial) setState(() => _isLoading = true);
 
-    final messages = await _api.fetchSupportMessages(widget.ticket.maHoiDap);
+    final messages = await _api.fetchSupportMessages(_maHoiDap);
 
     if (mounted) {
-      bool hasNewMessages = messages.length != _messages.length;
+      bool hasNew = messages.length != _messages.length;
 
       // Cập nhật trạng thái dựa trên tin nhắn cuối
       if (messages.isNotEmpty) {
@@ -69,10 +71,7 @@ class _SupportChatScreenState extends State<SupportChatScreen> {
         _messages.addAll(messages);
         _isLoading = false;
       });
-
-      if (hasNewMessages || initial) {
-        _scrollToBottom();
-      }
+      if (hasNew || initial) _scrollToBottom();
     }
   }
 
@@ -92,22 +91,23 @@ class _SupportChatScreenState extends State<SupportChatScreen> {
     final text = _messageCtrl.text.trim();
     if (text.isEmpty) return;
 
+    final user = Provider.of<UserProvider>(context, listen: false).user;
     _messageCtrl.clear();
-    setState(() {
-      _isSending = true;
-      _currentStatus = 'Chờ trả lời';
-    });
+    setState(() => _isSending = true);
 
     final response = await _api.sendSupportMessage(
-      widget.ticket.maHoiDap,
-      'KhachHang',
-      widget.user.realId,
+      _maHoiDap,
+      'NhanVien',
       null,
+      user?.realId,
       text,
     );
 
     if (mounted) {
-      setState(() => _isSending = false);
+      setState(() {
+        _isSending = false;
+        _currentStatus = 'Đã trả lời';
+      });
       if (response['success'] == true) {
         _loadMessages(initial: false);
       } else {
@@ -125,8 +125,6 @@ class _SupportChatScreenState extends State<SupportChatScreen> {
     switch (status) {
       case 'Chờ trả lời':
         return const Color(0xFFF59E0B);
-      case 'Đang xử lý':
-        return const Color(0xFF2563EB);
       case 'Đã trả lời':
         return const Color(0xFF10B981);
       case 'Đã đóng':
@@ -158,7 +156,6 @@ class _SupportChatScreenState extends State<SupportChatScreen> {
   @override
   Widget build(BuildContext context) {
     final statusColor = _getStatusColor(_currentStatus);
-    final isClosed = _currentStatus == 'Đã đóng';
 
     return Scaffold(
       backgroundColor: const Color(0xFFF1F5F9),
@@ -169,21 +166,28 @@ class _SupportChatScreenState extends State<SupportChatScreen> {
         titleSpacing: 0,
         title: Row(
           children: [
-            // Avatar nhân viên hỗ trợ
+            // Avatar khách hàng
             CircleAvatar(
               radius: 18,
               backgroundColor: Colors.white.withOpacity(0.2),
-              child: const Icon(Icons.support_agent,
-                  color: Colors.white, size: 20),
+              child: Text(
+                _tenKH.isNotEmpty ? _tenKH[0].toUpperCase() : '?',
+                style: const TextStyle(
+                  color: Colors.white,
+                  fontWeight: FontWeight.bold,
+                  fontSize: 16,
+                ),
+              ),
             ),
             const SizedBox(width: 10),
             Expanded(
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  const Text(
-                    'Hỗ trợ BookStore',
-                    style: TextStyle(fontWeight: FontWeight.bold, fontSize: 16),
+                  Text(
+                    _tenKH,
+                    style: const TextStyle(
+                        fontWeight: FontWeight.bold, fontSize: 16),
                     maxLines: 1,
                     overflow: TextOverflow.ellipsis,
                   ),
@@ -234,7 +238,21 @@ class _SupportChatScreenState extends State<SupportChatScreen> {
                     child: CircularProgressIndicator(
                         color: Color(0xFF2563EB)))
                 : _messages.isEmpty
-                    ? _buildChatEmptyState()
+                    ? Center(
+                        child: Column(
+                          mainAxisAlignment: MainAxisAlignment.center,
+                          children: [
+                            Icon(Icons.chat_bubble_outline_rounded,
+                                size: 64, color: Colors.grey.shade400),
+                            const SizedBox(height: 16),
+                            Text(
+                              'Chưa có cuộc hội thoại nào.',
+                              style: TextStyle(
+                                  color: Colors.grey.shade500, fontSize: 15),
+                            ),
+                          ],
+                        ),
+                      )
                     : ListView.builder(
                         controller: _scrollController,
                         padding: const EdgeInsets.symmetric(
@@ -242,58 +260,20 @@ class _SupportChatScreenState extends State<SupportChatScreen> {
                         itemCount: _messages.length,
                         itemBuilder: (ctx, i) {
                           final msg = _messages[i];
-                          final isCustomer = msg.nguoiGui == 'KhachHang';
+                          final isStaff = msg.nguoiGui == 'NhanVien';
                           return Column(
                             children: [
                               if (_shouldShowDateSeparator(i))
                                 _buildDateSeparator(msg.thoiGian),
-                              _buildMessageBubble(msg, isCustomer),
+                              _buildMessageBubble(msg, isStaff),
                             ],
                           );
                         },
                       ),
           ),
 
-          // Closed Ticket Banner or Input Box
-          if (isClosed)
-            Container(
-              width: double.infinity,
-              padding: const EdgeInsets.all(16),
-              color: Colors.grey.shade200,
-              child: const Row(
-                mainAxisAlignment: MainAxisAlignment.center,
-                children: [
-                  Icon(Icons.lock_rounded, color: Colors.grey, size: 20),
-                  SizedBox(width: 8),
-                  Text(
-                    'Yêu cầu hỗ trợ này đã được đóng lại.',
-                    style: TextStyle(
-                        color: Colors.grey,
-                        fontWeight: FontWeight.bold,
-                        fontSize: 14),
-                  ),
-                ],
-              ),
-            )
-          else
-            _buildInputBar(),
-        ],
-      ),
-    );
-  }
-
-  Widget _buildChatEmptyState() {
-    return Center(
-      child: Column(
-        mainAxisAlignment: MainAxisAlignment.center,
-        children: [
-          Icon(Icons.chat_bubble_outline_rounded,
-              size: 64, color: Colors.grey.shade400),
-          const SizedBox(height: 16),
-          Text(
-            'Chưa có cuộc hội thoại nào.',
-            style: TextStyle(color: Colors.grey.shade500, fontSize: 15),
-          ),
+          // Input Bar
+          _buildInputBar(),
         ],
       ),
     );
@@ -308,8 +288,7 @@ class _SupportChatScreenState extends State<SupportChatScreen> {
           Padding(
             padding: const EdgeInsets.symmetric(horizontal: 12),
             child: Container(
-              padding:
-                  const EdgeInsets.symmetric(horizontal: 12, vertical: 4),
+              padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 4),
               decoration: BoxDecoration(
                 color: Colors.grey.shade200,
                 borderRadius: BorderRadius.circular(12),
@@ -330,13 +309,15 @@ class _SupportChatScreenState extends State<SupportChatScreen> {
     );
   }
 
-  Widget _buildMessageBubble(TinNhanHoTro msg, bool isCustomer) {
-    final bubbleColor = isCustomer ? const Color(0xFF2563EB) : Colors.white;
-    final textColor = isCustomer ? Colors.white : const Color(0xFF1E293B);
+  Widget _buildMessageBubble(TinNhanHoTro msg, bool isStaff) {
+    final bubbleColor =
+        isStaff ? const Color(0xFF2563EB) : Colors.white;
+    final textColor =
+        isStaff ? Colors.white : const Color(0xFF1E293B);
     final formattedTime = DateFormat('HH:mm').format(msg.thoiGian);
 
     return Align(
-      alignment: isCustomer ? Alignment.centerRight : Alignment.centerLeft,
+      alignment: isStaff ? Alignment.centerRight : Alignment.centerLeft,
       child: Container(
         margin: const EdgeInsets.only(bottom: 12),
         constraints: BoxConstraints(
@@ -346,53 +327,50 @@ class _SupportChatScreenState extends State<SupportChatScreen> {
           mainAxisSize: MainAxisSize.min,
           crossAxisAlignment: CrossAxisAlignment.end,
           children: [
-            // Avatar bên trái cho nhân viên
-            if (!isCustomer) ...[
+            // Avatar bên trái cho khách hàng
+            if (!isStaff) ...[
               CircleAvatar(
                 radius: 14,
-                backgroundColor: const Color(0xFF10B981).withOpacity(0.15),
-                child: const Icon(
-                  Icons.support_agent,
-                  size: 16,
-                  color: Color(0xFF10B981),
+                backgroundColor: const Color(0xFF4A90D9).withOpacity(0.15),
+                child: Text(
+                  _tenKH.isNotEmpty ? _tenKH[0].toUpperCase() : '?',
+                  style: const TextStyle(
+                    fontSize: 11,
+                    fontWeight: FontWeight.bold,
+                    color: Color(0xFF4A90D9),
+                  ),
                 ),
               ),
               const SizedBox(width: 8),
             ],
             Flexible(
               child: Column(
-                crossAxisAlignment: isCustomer
-                    ? CrossAxisAlignment.end
-                    : CrossAxisAlignment.start,
+                crossAxisAlignment:
+                    isStaff ? CrossAxisAlignment.end : CrossAxisAlignment.start,
                 children: [
-                  // Sender name (only for staff)
-                  if (!isCustomer)
+                  if (!isStaff)
                     Padding(
                       padding: const EdgeInsets.only(left: 6, bottom: 4),
                       child: Text(
-                        'Nhân viên hỗ trợ',
+                        _tenKH,
                         style: TextStyle(
                             fontSize: 10.5,
                             color: Colors.grey.shade600,
                             fontWeight: FontWeight.bold),
                       ),
                     ),
-
-                  // Message Body
                   Container(
-                    padding: const EdgeInsets.symmetric(
-                        horizontal: 16, vertical: 11),
+                    padding:
+                        const EdgeInsets.symmetric(horizontal: 16, vertical: 11),
                     decoration: BoxDecoration(
                       color: bubbleColor,
                       borderRadius: BorderRadius.only(
                         topLeft: const Radius.circular(16),
                         topRight: const Radius.circular(16),
-                        bottomLeft: isCustomer
-                            ? const Radius.circular(16)
-                            : Radius.zero,
-                        bottomRight: isCustomer
-                            ? Radius.zero
-                            : const Radius.circular(16),
+                        bottomLeft:
+                            isStaff ? const Radius.circular(16) : Radius.zero,
+                        bottomRight:
+                            isStaff ? Radius.zero : const Radius.circular(16),
                       ),
                       boxShadow: [
                         BoxShadow(
@@ -411,11 +389,8 @@ class _SupportChatScreenState extends State<SupportChatScreen> {
                       ),
                     ),
                   ),
-
-                  // Message Time
                   Padding(
-                    padding:
-                        const EdgeInsets.only(top: 4, left: 6, right: 6),
+                    padding: const EdgeInsets.only(top: 4, left: 6, right: 6),
                     child: Text(
                       formattedTime,
                       style: TextStyle(
@@ -427,21 +402,16 @@ class _SupportChatScreenState extends State<SupportChatScreen> {
                 ],
               ),
             ),
-            // Avatar bên phải cho khách hàng
-            if (isCustomer) ...[
+            // Avatar bên phải cho nhân viên
+            if (isStaff) ...[
               const SizedBox(width: 8),
               CircleAvatar(
                 radius: 14,
                 backgroundColor: const Color(0xFF2563EB).withOpacity(0.15),
-                child: Text(
-                  widget.user.fullName.isNotEmpty
-                      ? widget.user.fullName[0].toUpperCase()
-                      : 'K',
-                  style: const TextStyle(
-                    fontSize: 11,
-                    fontWeight: FontWeight.bold,
-                    color: Color(0xFF2563EB),
-                  ),
+                child: const Icon(
+                  Icons.support_agent,
+                  size: 16,
+                  color: Color(0xFF2563EB),
                 ),
               ),
             ],
@@ -467,7 +437,6 @@ class _SupportChatScreenState extends State<SupportChatScreen> {
       child: SafeArea(
         child: Row(
           children: [
-            // Input field
             Expanded(
               child: Container(
                 padding: const EdgeInsets.symmetric(horizontal: 14),
@@ -480,7 +449,7 @@ class _SupportChatScreenState extends State<SupportChatScreen> {
                   maxLines: null,
                   style: const TextStyle(fontSize: 14.5),
                   decoration: const InputDecoration(
-                    hintText: 'Nhập tin nhắn hỗ trợ...',
+                    hintText: 'Nhập câu trả lời hỗ trợ...',
                     border: InputBorder.none,
                     contentPadding: EdgeInsets.symmetric(vertical: 10),
                   ),
@@ -489,7 +458,6 @@ class _SupportChatScreenState extends State<SupportChatScreen> {
               ),
             ),
             const SizedBox(width: 8),
-            // Send button
             CircleAvatar(
               radius: 20,
               backgroundColor: const Color(0xFF2563EB),

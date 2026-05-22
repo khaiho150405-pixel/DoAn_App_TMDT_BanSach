@@ -2,6 +2,7 @@ using BookStore_API.Models;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using System;
+using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
 
@@ -28,18 +29,25 @@ namespace BookStoreAPI.Controllers
         {
             var questions = await _context.Hoidaps
                 .Include(h => h.MakhNavigation)
+                .Include(h => h.Tinnhans)
                 .Where(h => h.Trangthai == "Chờ trả lời")
-                .OrderByDescending(h => h.Thoigiantao)
+                .OrderByDescending(h => h.Thoigianhoi)
                 .Select(h => new
                 {
                     Mahoidap = h.Mahoidap,
                     Makh = h.Makh,
                     TenKhachHang = h.MakhNavigation.Hovaten,
-                    Cauhoi = h.Noidung,
+                    Tieude = "",
+                    Cauhoi = h.Cauhoi,
+                    LoaiHoTro = "",
                     Traloi = (string?)null,
-                    Thoigianhoi = h.Thoigiantao,
+                    Thoigianhoi = h.Thoigianhoi,
                     Thoigiantraloi = (DateTime?)null,
-                    Trangthai = h.Trangthai
+                    Trangthai = h.Trangthai,
+                    TinNhanCuoi = h.Tinnhans
+                        .OrderByDescending(t => t.Thoigian)
+                        .Select(t => t.Noidung)
+                        .FirstOrDefault() ?? h.Cauhoi
                 })
                 .ToListAsync();
 
@@ -52,73 +60,70 @@ namespace BookStoreAPI.Controllers
         {
             var questions = await _context.Hoidaps
                 .Include(h => h.MakhNavigation)
-                .Include(h => h.ManvphutrachNavigation)
-                .OrderByDescending(h => h.Thoigiantao)
+                .Include(h => h.ManvNavigation)
+                .Include(h => h.Tinnhans)
+                .OrderByDescending(h => h.Thoigianhoi)
                 .Select(h => new
                 {
                     Mahoidap = h.Mahoidap,
                     Makh = h.Makh,
                     TenKhachHang = h.MakhNavigation.Hovaten,
-                    Cauhoi = h.Noidung,
-                    Traloi = h.Tinnhanhotros
-                        .Where(t => t.Nguoigui == "NhanVien")
+                    Tieude = "",
+                    Cauhoi = h.Cauhoi,
+                    LoaiHoTro = "",
+                    Traloi = h.Traloi,
+                    Manv = h.Manv,
+                    TenNhanVien = h.ManvNavigation != null ? h.ManvNavigation.Hovaten : null,
+                    Thoigianhoi = h.Thoigianhoi,
+                    Thoigiantraloi = h.Thoigiantraloi,
+                    Trangthai = h.Trangthai,
+                    TinNhanCuoi = h.Tinnhans
                         .OrderByDescending(t => t.Thoigian)
                         .Select(t => t.Noidung)
-                        .FirstOrDefault(),
-                    Manv = h.Manvphutrach,
-                    TenNhanVien = h.ManvphutrachNavigation != null ? h.ManvphutrachNavigation.Hovaten : null,
-                    Thoigianhoi = h.Thoigiantao,
-                    Thoigiantraloi = h.Capnhatcuoi,
-                    Trangthai = h.Trangthai
+                        .FirstOrDefault() ?? h.Traloi ?? h.Cauhoi
                 })
                 .ToListAsync();
 
             return Ok(questions);
         }
 
-        // 1.3 NHÂN VIÊN TRẢ LỜI CÂU HỎI (Tích hợp ghi vào bảng TINNHANHOTRO)
+        // 1.3 NHÂN VIÊN TRẢ LỜI CÂU HỎI (Tương thích ngược)
         [HttpPut("TraLoi/{maHoiDap}")]
         public async Task<IActionResult> ReplyQuestion(int maHoiDap, [FromBody] ReplyRequest request)
         {
-            using (var transaction = await _context.Database.BeginTransactionAsync())
+            try
             {
-                try
+                var ticket = await _context.Hoidaps.FindAsync(maHoiDap);
+                if (ticket == null)
+                    return NotFound(new { message = "Không tìm thấy yêu cầu hỗ trợ!" });
+
+                ticket.Traloi = request.TraLoi;
+                ticket.Manv = request.MaNV;
+                ticket.Thoigiantraloi = DateTime.Now;
+                ticket.Trangthai = "Đã trả lời";
+
+                // Đồng thời lưu vào bảng TINNHAN
+                _context.Tinnhans.Add(new Tinnhan
                 {
-                    var ticket = await _context.Hoidaps.FindAsync(maHoiDap);
-                    if (ticket == null)
-                        return NotFound(new { message = "Không tìm thấy yêu cầu hỗ trợ!" });
+                    Mahoidap = maHoiDap,
+                    Nguoigui = "NhanVien",
+                    Manv = request.MaNV,
+                    Noidung = request.TraLoi.Trim(),
+                    Thoigian = DateTime.Now
+                });
 
-                    ticket.Trangthai = "Đã trả lời";
-                    ticket.Manvphutrach = request.MaNV;
-                    ticket.Capnhatcuoi = DateTime.Now;
+                await _context.SaveChangesAsync();
 
-                    // Tạo tin nhắn phản hồi của nhân viên trong TINNHANHOTRO
-                    var message = new Tinnhanhotro
-                    {
-                        Mahoidap = maHoiDap,
-                        Nguoigui = "NhanVien",
-                        Manv = request.MaNV,
-                        Noidung = request.TraLoi,
-                        Thoigian = DateTime.Now,
-                        Daxem = false
-                    };
-
-                    _context.Tinnhanhotros.Add(message);
-                    await _context.SaveChangesAsync();
-                    await transaction.CommitAsync();
-
-                    return Ok(new { success = true, message = "Đã gửi câu trả lời hỗ trợ thành công!" });
-                }
-                catch (Exception ex)
-                {
-                    await transaction.RollbackAsync();
-                    return StatusCode(500, new { success = false, message = "Lỗi hệ thống: " + ex.Message });
-                }
+                return Ok(new { success = true, message = "Đã gửi câu trả lời hỗ trợ thành công!" });
+            }
+            catch (Exception ex)
+            {
+                return StatusCode(500, new { success = false, message = "Lỗi hệ thống: " + ex.Message });
             }
         }
 
         // =========================================================
-        // 2. DÀNH CHO KHÁCH HÀNG (Mới)
+        // 2. DÀNH CHO KHÁCH HÀNG
         // =========================================================
 
         // 2.1 LẤY DANH SÁCH TICKET HỖ TRỢ CỦA KHÁCH HÀNG
@@ -126,23 +131,24 @@ namespace BookStoreAPI.Controllers
         public async Task<IActionResult> GetTicketsByCustomer(int maKh)
         {
             var tickets = await _context.Hoidaps
+                .Include(h => h.Tinnhans)
                 .Where(h => h.Makh == maKh)
-                .OrderByDescending(h => h.Capnhatcuoi ?? h.Thoigiantao)
+                .OrderByDescending(h => h.Thoigiantraloi ?? h.Thoigianhoi)
                 .Select(h => new
                 {
                     h.Mahoidap,
                     h.Makh,
-                    h.Tieude,
-                    h.Noidung,
-                    h.Loaihotro,
+                    Tieude = "",
+                    Noidung = h.Cauhoi,
+                    Loaihotro = "",
                     h.Trangthai,
-                    h.Thoigiantao,
-                    h.Capnhatcuoi,
-                    h.Manvphutrach,
-                    TinNhanCuoi = h.Tinnhanhotros
+                    Thoigiantao = h.Thoigianhoi,
+                    Capnhatcuoi = h.Thoigiantraloi ?? h.Thoigianhoi,
+                    Manvphutrach = h.Manv,
+                    TinNhanCuoi = h.Tinnhans
                         .OrderByDescending(t => t.Thoigian)
                         .Select(t => t.Noidung)
-                        .FirstOrDefault() ?? h.Noidung
+                        .FirstOrDefault() ?? h.Traloi ?? h.Cauhoi
                 })
                 .ToListAsync();
 
@@ -153,80 +159,118 @@ namespace BookStoreAPI.Controllers
         [HttpPost("Tao")]
         public async Task<IActionResult> CreateTicket([FromBody] CreateTicketRequest request)
         {
-            if (string.IsNullOrWhiteSpace(request.TieuDe) || string.IsNullOrWhiteSpace(request.NoiDung))
+            if (string.IsNullOrWhiteSpace(request.NoiDung))
             {
-                return BadRequest(new { success = false, message = "Tiêu đề và nội dung không được để trống!" });
+                return BadRequest(new { success = false, message = "Nội dung không được để trống!" });
             }
 
-            using (var transaction = await _context.Database.BeginTransactionAsync())
+            try
             {
-                try
+                var ticket = new Hoidap
                 {
-                    var ticket = new Hoidap
-                    {
-                        Makh = request.MaKh,
-                        Tieude = request.TieuDe.Trim(),
-                        Noidung = request.NoiDung.Trim(),
-                        Loaihotro = request.LoaiHoTro,
-                        Trangthai = "Chờ trả lời",
-                        Thoigiantao = DateTime.Now,
-                        Capnhatcuoi = DateTime.Now
-                    };
+                    Makh = request.MaKh,
+                    Cauhoi = request.NoiDung.Trim(),
+                    Thoigianhoi = DateTime.Now,
+                    Trangthai = "Chờ trả lời"
+                };
 
-                    _context.Hoidaps.Add(ticket);
-                    await _context.SaveChangesAsync();
+                _context.Hoidaps.Add(ticket);
+                await _context.SaveChangesAsync();
 
-                    // Tự động tạo tin nhắn chat đầu tiên trong TINNHANHOTRO
-                    var firstMessage = new Tinnhanhotro
-                    {
-                        Mahoidap = ticket.Mahoidap,
-                        Nguoigui = "KhachHang",
-                        Makh = request.MaKh,
-                        Noidung = request.NoiDung.Trim(),
-                        Thoigian = DateTime.Now,
-                        Daxem = false
-                    };
-
-                    _context.Tinnhanhotros.Add(firstMessage);
-                    await _context.SaveChangesAsync();
-
-                    await transaction.CommitAsync();
-
-                    return Ok(new { success = true, message = "Tạo yêu cầu hỗ trợ thành công!", maHoiDap = ticket.Mahoidap });
-                }
-                catch (Exception ex)
+                // Tạo tin nhắn đầu tiên trong bảng TINNHAN
+                _context.Tinnhans.Add(new Tinnhan
                 {
-                    await transaction.RollbackAsync();
-                    return StatusCode(500, new { success = false, message = "Không thể tạo yêu cầu hỗ trợ: " + ex.Message });
-                }
+                    Mahoidap = ticket.Mahoidap,
+                    Nguoigui = "KhachHang",
+                    Makh = request.MaKh,
+                    Noidung = request.NoiDung.Trim(),
+                    Thoigian = DateTime.Now
+                });
+                await _context.SaveChangesAsync();
+
+                return Ok(new { success = true, message = "Tạo yêu cầu hỗ trợ thành công!", maHoiDap = ticket.Mahoidap });
+            }
+            catch (Exception ex)
+            {
+                return StatusCode(500, new { success = false, message = "Không thể tạo yêu cầu hỗ trợ: " + ex.Message });
             }
         }
 
-        // 2.3 LẤY TOÀN BỘ TIN NHẮN THEO MAHOIDAP
+        // 2.3 LẤY TOÀN BỘ TIN NHẮN THEO MAHOIDAP (từ bảng TINNHAN)
         [HttpGet("TinNhan/{maHoiDap}")]
         public async Task<IActionResult> GetMessages(int maHoiDap)
         {
-            var messages = await _context.Tinnhanhotros
+            var ticket = await _context.Hoidaps
+                .FirstOrDefaultAsync(x => x.Mahoidap == maHoiDap);
+
+            if (ticket == null)
+                return NotFound(new { success = false, message = "Không tìm thấy yêu cầu hỗ trợ!" });
+
+            // Lấy tin nhắn từ bảng TINNHAN
+            var messages = await _context.Tinnhans
                 .Where(t => t.Mahoidap == maHoiDap)
                 .OrderBy(t => t.Thoigian)
                 .Select(t => new
                 {
-                    t.Matinnhan,
-                    t.Mahoidap,
-                    t.Nguoigui,
-                    t.Makh,
-                    t.Manv,
-                    t.Noidung,
-                    t.Hinhanh,
-                    t.Daxem,
-                    t.Thoigian
+                    matinnhan = t.Matinnhan,
+                    mahoidap = t.Mahoidap,
+                    nguoigui = t.Nguoigui,
+                    makh = t.Makh,
+                    manv = t.Manv,
+                    noidung = t.Noidung,
+                    hinhanh = (string?)null,
+                    daxem = true,
+                    thoigian = t.Thoigian ?? DateTime.Now
                 })
                 .ToListAsync();
+
+            // Backward compatibility: Nếu chưa có tin nhắn trong TINNHAN,
+            // tạo từ Cauhoi/Traloi cũ trong bảng HOIDAP
+            if (!messages.Any())
+            {
+                var list = new List<object>();
+
+                // Tin nhắn 1: Câu hỏi của khách hàng
+                if (!string.IsNullOrWhiteSpace(ticket.Cauhoi))
+                {
+                    list.Add(new
+                    {
+                        matinnhan = 1,
+                        mahoidap = ticket.Mahoidap,
+                        nguoigui = "KhachHang",
+                        makh = (int?)ticket.Makh,
+                        manv = (int?)null,
+                        noidung = ticket.Cauhoi,
+                        hinhanh = (string?)null,
+                        daxem = true,
+                        thoigian = ticket.Thoigianhoi ?? DateTime.Now
+                    });
+                }
+
+                // Tin nhắn 2: Câu trả lời của nhân viên (nếu có)
+                if (!string.IsNullOrWhiteSpace(ticket.Traloi))
+                {
+                    list.Add(new
+                    {
+                        matinnhan = 2,
+                        mahoidap = ticket.Mahoidap,
+                        nguoigui = "NhanVien",
+                        makh = (int?)null,
+                        manv = ticket.Manv,
+                        noidung = ticket.Traloi,
+                        hinhanh = (string?)null,
+                        daxem = true,
+                        thoigian = ticket.Thoigiantraloi ?? DateTime.Now
+                    });
+                }
+
+                return Ok(list);
+            }
 
             return Ok(messages);
         }
 
-        // 2.4 GỬI TIN NHẮN MỚI
+        // 2.4 GỬI TIN NHẮN MỚI (Lưu vào bảng TINNHAN)
         [HttpPost("TinNhan/Gui")]
         public async Task<IActionResult> SendMessage([FromBody] SendMessageRequest request)
         {
@@ -241,48 +285,58 @@ namespace BookStoreAPI.Controllers
                 return NotFound(new { success = false, message = "Không tìm thấy yêu cầu hỗ trợ!" });
             }
 
-            using (var transaction = await _context.Database.BeginTransactionAsync())
+            try
             {
-                try
+                // Lưu tin nhắn mới vào bảng TINNHAN
+                var newMessage = new Tinnhan
                 {
-                    var message = new Tinnhanhotro
-                    {
-                        Mahoidap = request.MaHoiDap,
-                        Nguoigui = request.NguoiGui,
-                        Makh = request.NguoiGui == "KhachHang" ? request.MaKh : null,
-                        Manv = request.NguoiGui == "NhanVien" ? request.MaNv : null,
-                        Noidung = request.NoiDung.Trim(),
-                        Thoigian = DateTime.Now,
-                        Daxem = false
-                    };
+                    Mahoidap = request.MaHoiDap,
+                    Nguoigui = request.NguoiGui,
+                    Makh = request.NguoiGui == "KhachHang" ? request.MaKh : null,
+                    Manv = request.NguoiGui == "NhanVien" ? request.MaNv : null,
+                    Noidung = request.NoiDung.Trim(),
+                    Thoigian = DateTime.Now
+                };
 
-                    _context.Tinnhanhotros.Add(message);
+                _context.Tinnhans.Add(newMessage);
 
-                    // Cập nhật trạng thái ticket
-                    ticket.Capnhatcuoi = DateTime.Now;
-                    if (request.NguoiGui == "KhachHang")
-                    {
-                        ticket.Trangthai = "Chờ trả lời";
-                    }
-                    else if (request.NguoiGui == "NhanVien")
-                    {
-                        ticket.Trangthai = "Đã trả lời";
-                        if (request.MaNv.HasValue)
-                        {
-                            ticket.Manvphutrach = request.MaNv;
-                        }
-                    }
-
-                    await _context.SaveChangesAsync();
-                    await transaction.CommitAsync();
-
-                    return Ok(new { success = true, message = "Gửi tin nhắn thành công!", data = message });
-                }
-                catch (Exception ex)
+                // Cập nhật trạng thái ticket
+                if (request.NguoiGui == "KhachHang")
                 {
-                    await transaction.RollbackAsync();
-                    return StatusCode(500, new { success = false, message = "Không thể gửi tin nhắn: " + ex.Message });
+                    ticket.Trangthai = "Chờ trả lời";
                 }
+                else if (request.NguoiGui == "NhanVien")
+                {
+                    ticket.Traloi = request.NoiDung.Trim();
+                    ticket.Thoigiantraloi = DateTime.Now;
+                    ticket.Trangthai = "Đã trả lời";
+                    if (request.MaNv.HasValue)
+                    {
+                        ticket.Manv = request.MaNv;
+                    }
+                }
+
+                await _context.SaveChangesAsync();
+
+                // Tạo đối tượng tin nhắn trả về tương thích với frontend
+                var responseMessage = new
+                {
+                    matinnhan = newMessage.Matinnhan,
+                    mahoidap = ticket.Mahoidap,
+                    nguoigui = request.NguoiGui,
+                    makh = request.NguoiGui == "KhachHang" ? request.MaKh : null,
+                    manv = request.NguoiGui == "NhanVien" ? request.MaNv : null,
+                    noidung = request.NoiDung.Trim(),
+                    hinhanh = (string?)null,
+                    daxem = true,
+                    thoigian = newMessage.Thoigian ?? DateTime.Now
+                };
+
+                return Ok(new { success = true, message = "Gửi tin nhắn thành công!", data = responseMessage });
+            }
+            catch (Exception ex)
+            {
+                return StatusCode(500, new { success = false, message = "Không thể gửi tin nhắn: " + ex.Message });
             }
         }
     }

@@ -1,4 +1,4 @@
-﻿using BookStore_API.Models;
+using BookStore_API.Models;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 
@@ -117,10 +117,26 @@ namespace BookStoreAPI.Controllers
         public async Task<IActionResult> ChangeStatus(int maDH, [FromQuery] string statusMoi, [FromQuery] int maNV)
         {
             var order = await _context.Donhangs.FindAsync(maDH);
-            if (order == null) return NotFound("Đơn hàng không tồn tại.");
+            if (order == null) return NotFound(new { message = "Đơn hàng không tồn tại." });
+
+            // Validate status flow
+            var validTransitions = new Dictionary<string, List<string>>
+            {
+                { "Chờ xác nhận", new List<string> { "Đang chuẩn bị hàng", "Đã hủy" } },
+                { "Đang chuẩn bị hàng", new List<string> { "Đang giao", "Đã hủy" } },
+                { "Đang giao", new List<string> { "Hoàn thành" } },
+                { "Hoàn thành", new List<string>() },
+                { "Đã hủy", new List<string>() }
+            };
+
+            var currentStatus = order.Trangthaidonhang ?? "Chờ xác nhận";
+            if (validTransitions.ContainsKey(currentStatus) && !validTransitions[currentStatus].Contains(statusMoi))
+            {
+                return BadRequest(new { message = $"Không thể chuyển từ \"{currentStatus}\" sang \"{statusMoi}\"!" });
+            }
 
             order.Trangthaidonhang = statusMoi;
-            order.Manv = maNV; // Ghi nhận nhân viên nào phụ trách xử lý hóa đơn này
+            order.Manv = maNV;
 
             await _context.SaveChangesAsync();
             return Ok(new { message = $"Đã cập nhật trạng thái sang: {statusMoi}" });
