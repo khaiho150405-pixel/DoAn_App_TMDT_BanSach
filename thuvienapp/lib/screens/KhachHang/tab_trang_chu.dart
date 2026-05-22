@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:cached_network_image/cached_network_image.dart';
 import '../../models/user.dart';
 import '../../models/sach.dart';
 import '../../providers/api_service.dart';
@@ -20,6 +21,7 @@ class _TabTrangChuState extends State<TabTrangChu> {
   late Future<List<Sach>> _futureBooks;
   late Future<List<Sach>> _futureRecommendations;
   late Future<List<Sach>> _futureTrendingBooks;
+  late Future<List<Map<String, dynamic>>> _futureAiPromotions;
   final ApiService _apiService = ApiService();
 
   @override
@@ -34,6 +36,7 @@ class _TabTrangChuState extends State<TabTrangChu> {
         ? _apiService.fetchTrendingBooks()
         : _apiService.fetchUserRecommendations(widget.user!.realId);
     _futureTrendingBooks = _apiService.fetchTrendingBooks();
+    _futureAiPromotions = _apiService.fetchAiPromotions();
   }
 
   Future<void> _refreshBooks() async {
@@ -132,6 +135,9 @@ class _TabTrangChuState extends State<TabTrangChu> {
                   user: widget.user,
                   onRetry: _refreshBooks,
                 ),
+
+                // --- KHUYẾN MÃI TỪ AI ---
+                _buildAiPromotionSection(books),
 
                 // --- SÁCH KHUYẾN MÃI ---
                 if (discountedBooks.isNotEmpty) ...[
@@ -336,6 +342,547 @@ class _TabTrangChuState extends State<TabTrangChu> {
         ),
       ),
     );
+  }
+
+  /// Section khuyến mãi từ AI Mining
+  Widget _buildAiPromotionSection(List<Sach> allBooks) {
+    return FutureBuilder<List<Map<String, dynamic>>>(
+      future: _futureAiPromotions,
+      builder: (context, snapshot) {
+        if (!snapshot.hasData || snapshot.data!.isEmpty) {
+          return const SizedBox.shrink();
+        }
+
+        final promos = snapshot.data!;
+
+        return Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            _buildSectionTitle('Ưu đãi HOT', Icons.auto_awesome),
+            SizedBox(
+              height: 175,
+              child: ListView.builder(
+                scrollDirection: Axis.horizontal,
+                padding: const EdgeInsets.symmetric(horizontal: 12),
+                itemCount: promos.length,
+                itemBuilder: (context, index) {
+                  final promo = promos[index];
+                  final books = promo['danhSachSach'] as List<dynamic>? ?? [];
+                  final discount = promo['phanTramGiam'] ?? 0;
+                  final name = (promo['tenKM'] ?? '').toString().replaceFirst('[AI] ', '');
+                  final isCombo = books.length > 1;
+
+                  return GestureDetector(
+                    onTap: () => _handlePromoTap(promo, allBooks),
+                    child: Container(
+                      width: 290,
+                      margin: const EdgeInsets.only(right: 12, bottom: 8, top: 4),
+                      decoration: BoxDecoration(
+                        color: Colors.white,
+                        borderRadius: BorderRadius.circular(16),
+                        border: Border.all(
+                          color: const Color(0xFFEEEEEE),
+                          width: 1.5,
+                        ),
+                        boxShadow: [
+                          BoxShadow(
+                            color: Colors.black.withOpacity(0.03),
+                            blurRadius: 8,
+                            offset: const Offset(0, 4),
+                          ),
+                        ],
+                      ),
+                      child: Padding(
+                        padding: const EdgeInsets.all(14),
+                        child: Row(
+                          children: [
+                            // Left side: Badges, Title, Call-to-action
+                            Expanded(
+                              child: Column(
+                                crossAxisAlignment: CrossAxisAlignment.start,
+                                children: [
+                                  // Badges: category + discount
+                                  Row(
+                                    children: [
+                                      Container(
+                                        padding: const EdgeInsets.symmetric(
+                                          horizontal: 8,
+                                          vertical: 4,
+                                        ),
+                                        decoration: BoxDecoration(
+                                          color: isCombo
+                                              ? const Color(0xFFFFF7ED)
+                                              : const Color(0xFFEFF6FF),
+                                          borderRadius: BorderRadius.circular(6),
+                                        ),
+                                        child: Row(
+                                          mainAxisSize: MainAxisSize.min,
+                                          children: [
+                                            Icon(
+                                              isCombo ? Icons.layers_outlined : Icons.redeem,
+                                              color: isCombo
+                                                  ? const Color(0xFFEA580C)
+                                                  : const Color(0xFF2563EB),
+                                              size: 12,
+                                            ),
+                                            const SizedBox(width: 4),
+                                            Text(
+                                              isCombo ? 'COMBO' : 'HOT',
+                                              style: TextStyle(
+                                                color: isCombo
+                                                    ? const Color(0xFFEA580C)
+                                                    : const Color(0xFF2563EB),
+                                                fontSize: 10,
+                                                fontWeight: FontWeight.bold,
+                                              ),
+                                            ),
+                                          ],
+                                        ),
+                                      ),
+                                      const SizedBox(width: 6),
+                                      Container(
+                                        padding: const EdgeInsets.symmetric(
+                                          horizontal: 8,
+                                          vertical: 4,
+                                        ),
+                                        decoration: BoxDecoration(
+                                          color: Colors.red.shade50,
+                                          borderRadius: BorderRadius.circular(6),
+                                        ),
+                                        child: Text(
+                                          '-$discount%',
+                                          style: TextStyle(
+                                            color: Colors.red.shade700,
+                                            fontWeight: FontWeight.bold,
+                                            fontSize: 11,
+                                          ),
+                                        ),
+                                      ),
+                                    ],
+                                  ),
+                                  const SizedBox(height: 12),
+                                  // Promo name
+                                  Expanded(
+                                    child: Text(
+                                      name,
+                                      style: const TextStyle(
+                                        color: Color(0xFF1F2937),
+                                        fontSize: 13,
+                                        fontWeight: FontWeight.bold,
+                                        height: 1.3,
+                                      ),
+                                      maxLines: 2,
+                                      overflow: TextOverflow.ellipsis,
+                                    ),
+                                  ),
+                                  const SizedBox(height: 8),
+                                  // "Xem ngay" button
+                                  Row(
+                                    children: [
+                                      Text(
+                                        isCombo ? 'Xem combo' : 'Xem chi tiết',
+                                        style: const TextStyle(
+                                          color: AppColors.primaryBlue,
+                                          fontSize: 12,
+                                          fontWeight: FontWeight.w600,
+                                        ),
+                                      ),
+                                      const SizedBox(width: 4),
+                                      const Icon(
+                                        Icons.arrow_forward_rounded,
+                                        color: AppColors.primaryBlue,
+                                        size: 14,
+                                      ),
+                                    ],
+                                  ),
+                                ],
+                              ),
+                            ),
+                            const SizedBox(width: 12),
+                            // Right side: Book cover(s)
+                            SizedBox(
+                              width: 90,
+                              height: 110,
+                              child: Stack(
+                                clipBehavior: Clip.none,
+                                alignment: Alignment.centerRight,
+                                children: [
+                                  if (isCombo) ...[
+                                    // Overlapping stacked book covers
+                                    ...List.generate(
+                                      books.length.clamp(0, 2),
+                                      (idx) {
+                                        final reverseIdx = books.length.clamp(0, 2) - 1 - idx;
+                                        final displayBook = books[reverseIdx];
+                                        final displayImage = displayBook['hinhAnh'] ?? 'default_book.jpg';
+                                        
+                                        return Positioned(
+                                          right: reverseIdx * 18.0,
+                                          top: reverseIdx * 8.0,
+                                          child: Container(
+                                            decoration: BoxDecoration(
+                                              borderRadius: BorderRadius.circular(6),
+                                              boxShadow: [
+                                                BoxShadow(
+                                                  color: Colors.black.withOpacity(0.08),
+                                                  blurRadius: 6,
+                                                  offset: const Offset(0, 3),
+                                                ),
+                                              ],
+                                            ),
+                                            child: ClipRRect(
+                                              borderRadius: BorderRadius.circular(6),
+                                              child: CachedNetworkImage(
+                                                imageUrl: '${ApiService.imageUrl}$displayImage',
+                                                width: 50,
+                                                height: 70,
+                                                fit: BoxFit.cover,
+                                                placeholder: (_, __) => Container(
+                                                  width: 50,
+                                                  height: 70,
+                                                  color: Colors.grey[100],
+                                                ),
+                                                errorWidget: (_, __, ___) => Container(
+                                                  width: 50,
+                                                  height: 70,
+                                                  color: Colors.grey[200],
+                                                  child: const Icon(Icons.book, size: 18, color: Colors.grey),
+                                                ),
+                                              ),
+                                            ),
+                                          ),
+                                        );
+                                      },
+                                    ),
+                                    if (books.length > 2)
+                                      Positioned(
+                                        right: 0,
+                                        bottom: 12,
+                                        child: Container(
+                                          padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
+                                          decoration: BoxDecoration(
+                                            color: const Color(0xFF374151),
+                                            borderRadius: BorderRadius.circular(8),
+                                          ),
+                                          child: Text(
+                                            '+${books.length - 2}',
+                                            style: const TextStyle(
+                                              color: Colors.white,
+                                              fontSize: 9,
+                                              fontWeight: FontWeight.bold,
+                                            ),
+                                          ),
+                                        ),
+                                      ),
+                                  ] else ...[
+                                    // Single cover
+                                    if (books.isNotEmpty)
+                                      Center(
+                                        child: Container(
+                                          decoration: BoxDecoration(
+                                            borderRadius: BorderRadius.circular(8),
+                                            boxShadow: [
+                                              BoxShadow(
+                                                color: Colors.black.withOpacity(0.08),
+                                                blurRadius: 6,
+                                                offset: const Offset(0, 3),
+                                              ),
+                                            ],
+                                          ),
+                                          child: ClipRRect(
+                                            borderRadius: BorderRadius.circular(8),
+                                            child: CachedNetworkImage(
+                                              imageUrl: '${ApiService.imageUrl}${books[0]['hinhAnh'] ?? 'default_book.jpg'}',
+                                              width: 65,
+                                              height: 90,
+                                              fit: BoxFit.cover,
+                                              placeholder: (_, __) => Container(
+                                                width: 65,
+                                                height: 90,
+                                                color: Colors.grey[100],
+                                              ),
+                                              errorWidget: (_, __, ___) => Container(
+                                                width: 65,
+                                                height: 90,
+                                                color: Colors.grey[200],
+                                                child: const Icon(Icons.book, size: 24, color: Colors.grey),
+                                              ),
+                                            ),
+                                          ),
+                                        ),
+                                      ),
+                                  ],
+                                ],
+                              ),
+                            ),
+                          ],
+                        ),
+                      ),
+                    ),
+                  );
+                },
+              ),
+            ),
+          ],
+        );
+      },
+    );
+  }
+
+  void _handlePromoTap(Map<String, dynamic> promo, List<Sach> allBooks) {
+    final books = promo['danhSachSach'] as List<dynamic>? ?? [];
+    final discount = promo['phanTramGiam'] ?? 0;
+
+    if (books.isEmpty) return;
+
+    if (books.length == 1) {
+      final firstBook = books[0];
+      final fullSach = allBooks.firstWhere(
+        (s) => s.maSach == firstBook['maSach'],
+        orElse: () => Sach(
+          maSach: firstBook['maSach'] ?? 0,
+          tenSach: firstBook['tenSach'] ?? '',
+          hinhAnh: firstBook['hinhAnh'] ?? 'default_book.jpg',
+          tenTacGia: firstBook['tenTacGia'] ?? '',
+          giaGoc: (firstBook['giaBan'] ?? 0).toDouble(),
+          giaBanThucTe: (firstBook['giaBan'] ?? 0).toDouble() * (1 - (discount as num) / 100),
+          phanTramGiam: discount.toInt(),
+        ),
+      );
+
+      Navigator.push(
+        context,
+        MaterialPageRoute(
+          builder: (_) => BookDetailScreen(sach: fullSach, user: widget.user),
+        ),
+      );
+    } else {
+      _showComboDetailsSheet(promo, allBooks);
+    }
+  }
+
+  void _showComboDetailsSheet(Map<String, dynamic> promo, List<Sach> allBooks) {
+    final books = promo['danhSachSach'] as List<dynamic>? ?? [];
+    final discount = promo['phanTramGiam'] ?? 0;
+    final name = (promo['tenKM'] ?? '').toString().replaceFirst('[AI] ', '');
+
+    showModalBottomSheet(
+      context: context,
+      backgroundColor: Colors.white,
+      shape: const RoundedRectangleBorder(
+        borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
+      ),
+      builder: (context) {
+        return SafeArea(
+          child: Padding(
+            padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 16),
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Center(
+                  child: Container(
+                    width: 40,
+                    height: 4,
+                    margin: const EdgeInsets.only(bottom: 16),
+                    decoration: BoxDecoration(
+                      color: Colors.grey[300],
+                      borderRadius: BorderRadius.circular(2),
+                    ),
+                  ),
+                ),
+                Row(
+                  children: [
+                    Container(
+                      padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                      decoration: BoxDecoration(
+                        color: const Color(0xFFFFF7ED),
+                        borderRadius: BorderRadius.circular(6),
+                      ),
+                      child: const Text(
+                        'COMBO ƯU ĐÃI',
+                        style: TextStyle(
+                          color: Color(0xFFEA580C),
+                          fontSize: 10,
+                          fontWeight: FontWeight.bold,
+                        ),
+                      ),
+                    ),
+                    const SizedBox(width: 8),
+                    Container(
+                      padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                      decoration: BoxDecoration(
+                        color: Colors.red.shade50,
+                        borderRadius: BorderRadius.circular(6),
+                      ),
+                      child: Text(
+                        '-$discount%',
+                        style: TextStyle(
+                          color: Colors.red.shade700,
+                          fontSize: 10,
+                          fontWeight: FontWeight.bold,
+                        ),
+                      ),
+                    ),
+                  ],
+                ),
+                const SizedBox(height: 10),
+                Text(
+                  name,
+                  style: const TextStyle(
+                    fontSize: 16,
+                    fontWeight: FontWeight.bold,
+                    color: Color(0xFF1F2937),
+                  ),
+                ),
+                const SizedBox(height: 6),
+                Text(
+                  'Chọn một cuốn sách dưới đây để xem thông tin chi tiết:',
+                  style: TextStyle(
+                    fontSize: 13,
+                    color: Colors.grey[600],
+                  ),
+                ),
+                const SizedBox(height: 16),
+                Flexible(
+                  child: ListView.separated(
+                    shrinkWrap: true,
+                    itemCount: books.length,
+                    separatorBuilder: (_, __) => const Divider(height: 20, color: Color(0xFFEEEEEE)),
+                    itemBuilder: (context, idx) {
+                      final item = books[idx];
+                      final bookId = item['maSach'] ?? 0;
+                      final bookTitle = item['tenSach'] ?? '';
+                      final bookImage = item['hinhAnh'] ?? 'default_book.jpg';
+                      final author = item['tenTacGia'] ?? 'Chưa rõ';
+                      final originalPrice = (item['giaBan'] ?? 0).toDouble();
+                      final finalPrice = originalPrice * (1 - (discount as num) / 100);
+
+                      final fullSach = allBooks.firstWhere(
+                        (s) => s.maSach == bookId,
+                        orElse: () => Sach(
+                          maSach: bookId,
+                          tenSach: bookTitle,
+                          hinhAnh: bookImage,
+                          tenTacGia: author,
+                          giaGoc: originalPrice,
+                          giaBanThucTe: finalPrice,
+                          phanTramGiam: discount.toInt(),
+                        ),
+                      );
+
+                      return InkWell(
+                        onTap: () {
+                          Navigator.pop(context);
+                          Navigator.push(
+                            context,
+                            MaterialPageRoute(
+                              builder: (_) => BookDetailScreen(sach: fullSach, user: widget.user),
+                            ),
+                          );
+                        },
+                        borderRadius: BorderRadius.circular(8),
+                        child: Padding(
+                          padding: const EdgeInsets.symmetric(vertical: 4),
+                          child: Row(
+                            children: [
+                              Container(
+                                decoration: BoxDecoration(
+                                  borderRadius: BorderRadius.circular(6),
+                                  border: Border.all(color: const Color(0xFFEEEEEE)),
+                                ),
+                                child: ClipRRect(
+                                  borderRadius: BorderRadius.circular(6),
+                                  child: CachedNetworkImage(
+                                    imageUrl: '${ApiService.imageUrl}$bookImage',
+                                    width: 46,
+                                    height: 60,
+                                    fit: BoxFit.cover,
+                                    placeholder: (_, __) => Container(width: 46, height: 60, color: Colors.grey[100]),
+                                    errorWidget: (_, __, ___) => Container(
+                                      width: 46,
+                                      height: 60,
+                                      color: Colors.grey[200],
+                                      child: const Icon(Icons.book, size: 18, color: Colors.grey),
+                                    ),
+                                  ),
+                                ),
+                              ),
+                              const SizedBox(width: 12),
+                              Expanded(
+                                child: Column(
+                                  crossAxisAlignment: CrossAxisAlignment.start,
+                                  children: [
+                                    Text(
+                                      bookTitle,
+                                      style: const TextStyle(
+                                        fontSize: 14,
+                                        fontWeight: FontWeight.bold,
+                                        color: Color(0xFF1F2937),
+                                      ),
+                                      maxLines: 1,
+                                      overflow: TextOverflow.ellipsis,
+                                    ),
+                                    const SizedBox(height: 2),
+                                    Text(
+                                      'Tác giả: $author',
+                                      style: TextStyle(
+                                        fontSize: 12,
+                                        color: Colors.grey[600],
+                                      ),
+                                      maxLines: 1,
+                                      overflow: TextOverflow.ellipsis,
+                                    ),
+                                    const SizedBox(height: 4),
+                                    Row(
+                                      children: [
+                                        Text(
+                                          '${_formatPrice(finalPrice)} đ',
+                                          style: const TextStyle(
+                                            fontSize: 13,
+                                            color: Colors.red,
+                                            fontWeight: FontWeight.bold,
+                                          ),
+                                        ),
+                                        const SizedBox(width: 8),
+                                        Text(
+                                          '${_formatPrice(originalPrice)} đ',
+                                          style: TextStyle(
+                                            fontSize: 11,
+                                            color: Colors.grey[500],
+                                            decoration: TextDecoration.lineThrough,
+                                          ),
+                                        ),
+                                      ],
+                                    ),
+                                  ],
+                                ),
+                              ),
+                              const SizedBox(width: 8),
+                              const Icon(
+                                Icons.chevron_right_rounded,
+                                color: Colors.grey,
+                                size: 20,
+                              ),
+                            ],
+                          ),
+                        ),
+                      );
+                    },
+                  ),
+                ),
+                const SizedBox(height: 12),
+              ],
+            ),
+          ),
+        );
+      },
+    );
+  }
+
+  String _formatPrice(double price) {
+    return price.toStringAsFixed(0).replaceAllMapped(
+        RegExp(r'(\d{1,3})(?=(\d{3})+(?!\d))'), (m) => '${m[1]}.');
   }
 
   /// Tiêu đề section

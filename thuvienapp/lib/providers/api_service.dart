@@ -897,6 +897,62 @@ class ApiService {
       return {'success': false, 'message': 'Không thể kết nối server!'};
     }
   }
+  // =========================================================
+  // MINING — VertTopKDS Top-K Analysis
+  // =========================================================
+
+  Future<Map<String, dynamic>> runMiningTopK(int k) async {
+    try {
+      final response = await http.post(
+        Uri.parse('$baseUrl/Mining/topk?k=$k'),
+        headers: {'Content-Type': 'application/json'},
+      );
+      if (response.statusCode == 200) {
+        return json.decode(response.body) as Map<String, dynamic>;
+      }
+      final error = _tryDecodeMap(response.body);
+      throw Exception(error['message'] ?? 'Mining API error: ${response.statusCode}');
+    } catch (e) {
+      if (e is Exception) rethrow;
+      debugPrint('runMiningTopK error: $e');
+      throw Exception('Không thể kết nối server Mining!');
+    }
+  }
+
+  Future<Map<String, dynamic>> applyMiningPromotions(List<dynamic> results) async {
+    try {
+      final response = await http.post(
+        Uri.parse('$baseUrl/Mining/apply-promotions'),
+        headers: {'Content-Type': 'application/json'},
+        body: json.encode({'results': results}),
+      );
+      if (response.statusCode == 200) {
+        return json.decode(response.body) as Map<String, dynamic>;
+      }
+      final error = _tryDecodeMap(response.body);
+      throw Exception(error['message'] ?? 'Apply promotions error: ${response.statusCode}');
+    } catch (e) {
+      if (e is Exception) rethrow;
+      debugPrint('applyMiningPromotions error: $e');
+      throw Exception('Không thể kết nối server!');
+    }
+  }
+
+  Future<List<Map<String, dynamic>>> fetchAiPromotions() async {
+    try {
+      final response = await http.get(
+        Uri.parse('$baseUrl/Promotions/ai-generated'),
+      );
+      if (response.statusCode == 200) {
+        final List jsonResponse = json.decode(response.body);
+        return jsonResponse.cast<Map<String, dynamic>>();
+      }
+      return [];
+    } catch (e) {
+      debugPrint('fetchAiPromotions error: $e');
+      return [];
+    }
+  }
 
   Map<String, dynamic> _tryDecodeMap(String body) {
     if (body.isEmpty) return {};

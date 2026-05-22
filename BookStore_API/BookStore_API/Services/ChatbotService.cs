@@ -113,7 +113,7 @@ namespace BookStoreAPI.Services
         {
             return new ChatbotMessageResponseDto
             {
-                Reply = "Chatbot dang tam thoi ban. Vui long thu lai sau it phut.",
+                Reply = "Chatbot đang tạm thời. Vui lòng thử lại sau ít phút.",
                 RecommendedBooks = new List<ChatbotRecommendedBookDto>()
             };
         }
@@ -122,7 +122,7 @@ namespace BookStoreAPI.Services
         {
             return new ChatbotMessageResponseDto
             {
-                Reply = "Minh chua the tao cau tra loi luc nay. Ban co the hoi ve ten sach, tac gia, the loai hoac khuyen mai.",
+                Reply = "Minh chưa thể tạo câu trả lời lúc này. Bạn có thể hỏi về tên sách, tác giả, thể loại hoặc khuyến mãi.",
                 RecommendedBooks = new List<ChatbotRecommendedBookDto>()
             };
         }

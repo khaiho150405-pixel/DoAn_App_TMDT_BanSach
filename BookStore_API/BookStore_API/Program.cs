@@ -22,6 +22,7 @@ builder.Services.AddHttpClient<IRecommendationService, RecommendationService>(cl
     client.BaseAddress = new Uri(baseUrl);
     client.Timeout = TimeSpan.FromSeconds(8);
 });
+builder.Services.AddHttpClient(); // For MiningController
 
 builder.Services.AddControllers();
 // Learn more about configuring OpenAPI at https://aka.ms/aspnet/openapi
