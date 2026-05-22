@@ -104,6 +104,54 @@ class ApiService {
     }
   }
 
+  Future<List<Sach>> fetchUserRecommendations(int maKh) async {
+    try {
+      final response = await http.get(
+        Uri.parse('$baseUrl/Recommendation/user/$maKh'),
+      );
+      if (response.statusCode == 200) {
+        final List jsonResponse = json.decode(response.body);
+        return jsonResponse.map((data) => Sach.fromJson(data)).toList();
+      }
+      throw Exception('Recommendation API error: ${response.statusCode}');
+    } catch (e) {
+      debugPrint('fetchUserRecommendations error: $e');
+      return [];
+    }
+  }
+
+  Future<List<Sach>> fetchSimilarBooks(int maSach) async {
+    try {
+      final response = await http.get(
+        Uri.parse('$baseUrl/Recommendation/book/$maSach'),
+      );
+      if (response.statusCode == 200) {
+        final List jsonResponse = json.decode(response.body);
+        return jsonResponse.map((data) => Sach.fromJson(data)).toList();
+      }
+      throw Exception('Similar books API error: ${response.statusCode}');
+    } catch (e) {
+      debugPrint('fetchSimilarBooks error: $e');
+      return [];
+    }
+  }
+
+  Future<List<Sach>> fetchTrendingBooks() async {
+    try {
+      final response = await http.get(
+        Uri.parse('$baseUrl/Recommendation/trending'),
+      );
+      if (response.statusCode == 200) {
+        final List jsonResponse = json.decode(response.body);
+        return jsonResponse.map((data) => Sach.fromJson(data)).toList();
+      }
+      throw Exception('Trending API error: ${response.statusCode}');
+    } catch (e) {
+      debugPrint('fetchTrendingBooks error: $e');
+      return [];
+    }
+  }
+
   Future<DashboardSummary> fetchDashboardSummary() async {
     final response = await http.get(Uri.parse('$baseUrl/dashboard/summary'));
     if (response.statusCode == 200) {

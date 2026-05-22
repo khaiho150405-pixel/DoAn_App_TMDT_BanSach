@@ -3,7 +3,9 @@ import '../../models/user.dart';
 import '../../models/sach.dart';
 import '../../providers/api_service.dart';
 import 'book_detail_screen.dart';
+import '../chatbot/chatbot_screen.dart';
 import '../../theme/app_theme.dart';
+import '../../widgets/recommendation_section.dart';
 
 /// Tab Trang Chủ - Hiển thị danh sách sách nổi bật, sách mới, khuyến mãi
 class TabTrangChu extends StatefulWidget {
@@ -16,16 +18,27 @@ class TabTrangChu extends StatefulWidget {
 
 class _TabTrangChuState extends State<TabTrangChu> {
   late Future<List<Sach>> _futureBooks;
+  late Future<List<Sach>> _futureRecommendations;
+  late Future<List<Sach>> _futureTrendingBooks;
+  final ApiService _apiService = ApiService();
 
   @override
   void initState() {
     super.initState();
-    _futureBooks = ApiService().fetchBooks();
+    _loadHomeData();
+  }
+
+  void _loadHomeData() {
+    _futureBooks = _apiService.fetchBooks();
+    _futureRecommendations = widget.user == null
+        ? _apiService.fetchTrendingBooks()
+        : _apiService.fetchUserRecommendations(widget.user!.realId);
+    _futureTrendingBooks = _apiService.fetchTrendingBooks();
   }
 
   Future<void> _refreshBooks() async {
     setState(() {
-      _futureBooks = ApiService().fetchBooks();
+      _loadHomeData();
     });
   }
 
@@ -101,6 +114,24 @@ class _TabTrangChuState extends State<TabTrangChu> {
               children: [
                 // --- BANNER ---
                 _buildBanner(),
+
+                _buildAIChatbotBanner(),
+
+                RecommendationSection(
+                  title: 'Có thể bạn thích',
+                  icon: Icons.auto_awesome,
+                  future: _futureRecommendations,
+                  user: widget.user,
+                  onRetry: _refreshBooks,
+                ),
+
+                RecommendationSection(
+                  title: 'Sách đang hot',
+                  icon: Icons.local_fire_department,
+                  future: _futureTrendingBooks,
+                  user: widget.user,
+                  onRetry: _refreshBooks,
+                ),
 
                 // --- SÁCH KHUYẾN MÃI ---
                 if (discountedBooks.isNotEmpty) ...[
@@ -208,6 +239,101 @@ class _TabTrangChuState extends State<TabTrangChu> {
           Icon(Icons.auto_stories,
               size: 60, color: AppColors.primaryBlue.withOpacity(0.8)),
         ],
+      ),
+    );
+  }
+
+  Widget _buildAIChatbotBanner() {
+    return GestureDetector(
+      onTap: () {
+        Navigator.push(
+          context,
+          MaterialPageRoute(builder: (_) => const ChatbotScreen()),
+        );
+      },
+      child: Container(
+        width: double.infinity,
+        margin: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+        padding: const EdgeInsets.all(16),
+        decoration: BoxDecoration(
+          gradient: LinearGradient(
+            colors: [
+              const Color(0xFFEFF6FF),
+              const Color(0xFFEEF2FF),
+              Colors.indigo.shade50,
+            ],
+            begin: Alignment.topLeft,
+            end: Alignment.bottomRight,
+          ),
+          borderRadius: BorderRadius.circular(16),
+          border: Border.all(color: AppColors.primaryBlue.withValues(alpha: 0.15)),
+          boxShadow: [
+            BoxShadow(
+              color: Colors.indigo.withValues(alpha: 0.04),
+              blurRadius: 8,
+              offset: const Offset(0, 4),
+            ),
+          ],
+        ),
+        child: Row(
+          children: [
+            Container(
+              padding: const EdgeInsets.all(10),
+              decoration: BoxDecoration(
+                color: Colors.white,
+                shape: BoxShape.circle,
+                boxShadow: [
+                  BoxShadow(
+                    color: AppColors.primaryBlue.withValues(alpha: 0.1),
+                    blurRadius: 6,
+                  ),
+                ],
+              ),
+              child: const Icon(
+                Icons.smart_toy_outlined,
+                color: AppColors.primaryBlue,
+                size: 26,
+              ),
+            ),
+            const SizedBox(width: 14),
+            Expanded(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  const Row(
+                    children: [
+                      Text(
+                        'Trợ lý ảo AI thông minh',
+                        style: TextStyle(
+                          fontSize: 15,
+                          fontWeight: FontWeight.bold,
+                          color: Color(0xFF1E3A8A),
+                        ),
+                      ),
+                      SizedBox(width: 6),
+                      Icon(Icons.auto_awesome, color: Colors.amber, size: 14),
+                    ],
+                  ),
+                  const SizedBox(height: 4),
+                  Text(
+                    'Tìm kiếm sách thông minh & nhận gợi ý đọc phù hợp nhất với bạn.',
+                    style: TextStyle(
+                      fontSize: 12,
+                      color: Colors.grey[700],
+                      height: 1.3,
+                    ),
+                  ),
+                ],
+              ),
+            ),
+            const SizedBox(width: 8),
+            const Icon(
+              Icons.chevron_right_rounded,
+              color: AppColors.primaryBlue,
+              size: 24,
+            ),
+          ],
+        ),
       ),
     );
   }
