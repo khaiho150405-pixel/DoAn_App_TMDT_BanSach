@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 
 namespace BookStore_API.Models;
@@ -9,19 +9,23 @@ public partial class Hoidap
 
     public int Makh { get; set; }
 
-    public string Cauhoi { get; set; } = null!;
+    public string Tieude { get; set; } = null!;
 
-    public string? Traloi { get; set; }
+    public string Noidung { get; set; } = null!;
 
-    public int? Manv { get; set; }
-
-    public DateTime? Thoigianhoi { get; set; }
-
-    public DateTime? Thoigiantraloi { get; set; }
+    public string? Loaihotro { get; set; }
 
     public string? Trangthai { get; set; }
 
+    public DateTime? Thoigiantao { get; set; }
+
+    public DateTime? Capnhatcuoi { get; set; }
+
+    public int? Manvphutrach { get; set; }
+
     public virtual Khachhang MakhNavigation { get; set; } = null!;
 
-    public virtual Nhanvien? ManvNavigation { get; set; }
+    public virtual Nhanvien? ManvphutrachNavigation { get; set; }
+
+    public virtual ICollection<Tinnhanhotro> Tinnhanhotros { get; set; } = new List<Tinnhanhotro>();
 }

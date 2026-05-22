@@ -11,6 +11,7 @@ import '../theme/app_theme.dart';
 import 'KhachHang/home_screen.dart';
 import 'NVSale/sale_home_screen.dart';
 import 'admin/admin_main_screen.dart';
+import 'register_screen.dart';
 
 class LoginScreen extends StatefulWidget {
   const LoginScreen({super.key});
@@ -84,7 +85,7 @@ class _LoginScreenState extends State<LoginScreen> {
         if (!mounted) return;
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
-            content: Text(data['message'] ?? 'Dang nhap that bai'),
+            content: Text(data['message'] ?? 'Đăng nhập thất bại'),
             backgroundColor: Colors.red,
           ),
         );
@@ -93,7 +94,7 @@ class _LoginScreenState extends State<LoginScreen> {
       if (!mounted) return;
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(
-          content: Text('Khong the ket noi den may chu API!'),
+          content: Text('Không thể kết nối đến máy chủ API!'),
           backgroundColor: Colors.red,
         ),
       );
@@ -153,14 +154,14 @@ class _LoginScreenState extends State<LoginScreen> {
                     TextFormField(
                       controller: _usernameController,
                       decoration: InputDecoration(
-                        labelText: 'Ten dang nhap',
+                        labelText: 'Tên đăng nhập',
                         prefixIcon: const Icon(Icons.person),
                         border: OutlineInputBorder(
                           borderRadius: BorderRadius.circular(12),
                         ),
                       ),
                       validator: (value) => value == null || value.isEmpty
-                          ? 'Vui long nhap ten dang nhap'
+                          ? 'Vui lòng nhập tên đăng nhập'
                           : null,
                     ),
                     const SizedBox(height: 20),
@@ -168,7 +169,7 @@ class _LoginScreenState extends State<LoginScreen> {
                       controller: _passwordController,
                       obscureText: _obscurePassword,
                       decoration: InputDecoration(
-                        labelText: 'Mat khau',
+                        labelText: 'Mật khẩu',
                         prefixIcon: const Icon(Icons.lock),
                         suffixIcon: IconButton(
                           icon: Icon(
@@ -187,7 +188,7 @@ class _LoginScreenState extends State<LoginScreen> {
                         ),
                       ),
                       validator: (value) => value == null || value.isEmpty
-                          ? 'Vui long nhap mat khau'
+                          ? 'Vui lòng nhập mật khẩu'
                           : null,
                     ),
                     const SizedBox(height: 30),
@@ -208,7 +209,7 @@ class _LoginScreenState extends State<LoginScreen> {
                                 color: Colors.white,
                               )
                             : const Text(
-                                'DANG NHAP',
+                                'ĐĂNG NHẬP',
                                 style: TextStyle(
                                   fontSize: 16,
                                   fontWeight: FontWeight.bold,
@@ -220,18 +221,18 @@ class _LoginScreenState extends State<LoginScreen> {
                     Row(
                       mainAxisAlignment: MainAxisAlignment.center,
                       children: [
-                        const Text('Chua co tai khoan?'),
+                        const Text('Chưa có tài khoản?'),
                         TextButton(
                           onPressed: () {
-                            ScaffoldMessenger.of(context).showSnackBar(
-                              const SnackBar(
-                                content:
-                                    Text('Tinh nang dang ky dang cap nhat'),
+                            Navigator.push(
+                              context,
+                              MaterialPageRoute(
+                                builder: (context) => const RegisterScreen(),
                               ),
                             );
                           },
                           child: const Text(
-                            'Dang ky ngay',
+                            'Đăng ký ngay',
                             style: TextStyle(
                               color: AppColors.primaryBlue,
                               fontWeight: FontWeight.bold,

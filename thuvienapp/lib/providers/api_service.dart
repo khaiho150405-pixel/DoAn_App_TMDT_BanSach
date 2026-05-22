@@ -7,6 +7,9 @@ import '../models/admin_user.dart';
 import '../models/dashboard.dart';
 import '../models/promotion.dart';
 import '../models/sach.dart';
+import '../models/danh_gia.dart';
+import '../models/ho_dap.dart';
+import '../models/tin_nhan_ho_tro.dart';
 
 class ApiService {
   static const String baseUrl = 'http://10.0.2.2:5235/api';
@@ -349,6 +352,90 @@ class ApiService {
     }
   }
 
+  // =========================================================
+  // HỎI ĐÁP / HỖ TRỢ (Khách hàng)
+  // =========================================================
+
+  Future<List<HoiDap>> fetchSupportTickets(int maKh) async {
+    try {
+      final response = await http.get(Uri.parse('$baseUrl/HoiDap/KhachHang/$maKh'));
+      if (response.statusCode == 200) {
+        final List jsonResponse = json.decode(response.body);
+        return jsonResponse.map((data) => HoiDap.fromJson(data)).toList();
+      }
+      throw Exception('API error: ${response.statusCode}');
+    } catch (e) {
+      debugPrint('fetchSupportTickets error: $e');
+      return [];
+    }
+  }
+
+  Future<Map<String, dynamic>> createSupportTicket(
+    int maKh,
+    String tieuDe,
+    String loaiHoTro,
+    String noiDung,
+  ) async {
+    try {
+      final response = await http.post(
+        Uri.parse('$baseUrl/HoiDap/Tao'),
+        headers: {'Content-Type': 'application/json'},
+        body: json.encode({
+          'maKh': maKh,
+          'tieuDe': tieuDe,
+          'loaiHoTro': loaiHoTro,
+          'noiDung': noiDung,
+        }),
+      );
+      final data = _tryDecodeMap(response.body);
+      return {'success': response.statusCode == 200, ...data};
+    } catch (e) {
+      debugPrint('createSupportTicket error: $e');
+      return {'success': false, 'message': 'Không thể kết nối máy chủ!'};
+    }
+  }
+
+  Future<List<TinNhanHoTro>> fetchSupportMessages(int maHoiDap) async {
+    try {
+      final response = await http.get(Uri.parse('$baseUrl/HoiDap/TinNhan/$maHoiDap'));
+      if (response.statusCode == 200) {
+        final List jsonResponse = json.decode(response.body);
+        return jsonResponse.map((data) => TinNhanHoTro.fromJson(data)).toList();
+      }
+      throw Exception('API error: ${response.statusCode}');
+    } catch (e) {
+      debugPrint('fetchSupportMessages error: $e');
+      return [];
+    }
+  }
+
+  Future<Map<String, dynamic>> sendSupportMessage(
+    int maHoiDap,
+    String nguoiGui,
+    int? maKh,
+    int? maNv,
+    String noiDung,
+  ) async {
+    try {
+      final response = await http.post(
+        Uri.parse('$baseUrl/HoiDap/TinNhan/Gui'),
+        headers: {'Content-Type': 'application/json'},
+        body: json.encode({
+          'maHoiDap': maHoiDap,
+          'nguoiGui': nguoiGui,
+          'maKh': maKh,
+          'maNv': maNv,
+          'noiDung': noiDung,
+        }),
+      );
+      final data = _tryDecodeMap(response.body);
+      return {'success': response.statusCode == 200, ...data};
+    } catch (e) {
+      debugPrint('sendSupportMessage error: $e');
+      return {'success': false, 'message': 'Không thể kết nối máy chủ!'};
+    }
+  }
+
   Future<List<Map<String, dynamic>>> fetchAllReviews() async {
     try {
       final response = await http.get(Uri.parse('$baseUrl/DanhGia/DanhSach'));
@@ -375,6 +462,60 @@ class ApiService {
       return {'success': false, 'message': 'Khong the ket noi server!'};
     }
   }
+
+  Future<List<DanhGia>> fetchReviewsByBook(int maSach) async {
+    try {
+      final response = await http.get(Uri.parse('$baseUrl/DanhGia/Sach/$maSach'));
+      if (response.statusCode == 200) {
+        final List jsonResponse = json.decode(response.body);
+        return jsonResponse.map((data) => DanhGia.fromJson(data)).toList();
+      }
+      throw Exception('API error: ${response.statusCode}');
+    } catch (e) {
+      debugPrint('fetchReviewsByBook error: $e');
+      return [];
+    }
+  }
+
+  Future<List<DanhGia>> fetchReviewsByCustomer(int maKh) async {
+    try {
+      final response = await http.get(Uri.parse('$baseUrl/DanhGia/KhachHang/$maKh'));
+      if (response.statusCode == 200) {
+        final List jsonResponse = json.decode(response.body);
+        return jsonResponse.map((data) => DanhGia.fromJson(data)).toList();
+      }
+      throw Exception('API error: ${response.statusCode}');
+    } catch (e) {
+      debugPrint('fetchReviewsByCustomer error: $e');
+      return [];
+    }
+  }
+
+  Future<Map<String, dynamic>> saveReview({
+    required int maSach,
+    required int maKh,
+    required int diem,
+    required String nhanXet,
+  }) async {
+    try {
+      final response = await http.post(
+        Uri.parse('$baseUrl/DanhGia/Luu'),
+        headers: {'Content-Type': 'application/json'},
+        body: json.encode({
+          'maSach': maSach,
+          'maKh': maKh,
+          'diem': diem,
+          'nhanxet': nhanXet,
+        }),
+      );
+      final data = _tryDecodeMap(response.body);
+      return {'success': response.statusCode == 200, ...data};
+    } catch (e) {
+      debugPrint('saveReview error: $e');
+      return {'success': false, 'message': 'Không thể kết nối server!'};
+    }
+  }
+
 
   Future<List<Map<String, dynamic>>> fetchNewBooksNews() async {
     try {
