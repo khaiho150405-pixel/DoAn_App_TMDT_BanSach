@@ -12,6 +12,7 @@ import 'KhachHang/home_screen.dart';
 import 'NVSale/sale_home_screen.dart';
 import 'admin/admin_main_screen.dart';
 import 'register_screen.dart';
+import 'warehouse/warehouse_main_screen.dart';
 
 class LoginScreen extends StatefulWidget {
   const LoginScreen({super.key});
@@ -69,7 +70,7 @@ class _LoginScreenState extends State<LoginScreen> {
             nextScreen = const SaleHomeScreen();
             break;
           case 3:
-            nextScreen = HomeScreen(user: loggedInUser);
+            nextScreen = const WarehouseMainScreen();
             break;
           case 4:
           default:

@@ -230,7 +230,8 @@ class _InlineError extends StatelessWidget {
       ),
       child: Row(
         children: [
-          const Icon(Icons.info_outline, color: Color(0xFFEA580C), size: 18),
+          const Icon(Icons.info_outline,
+              color: Color.fromARGB(255, 250, 0, 0), size: 18),
           const SizedBox(width: 8),
           Expanded(
             child: Text(

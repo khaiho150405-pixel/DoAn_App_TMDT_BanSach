@@ -8,6 +8,7 @@ import 'providers/dashboard_provider.dart';
 import 'providers/order_provider.dart';
 import 'providers/promotion_provider.dart';
 import 'providers/user_provider.dart';
+import 'providers/warehouse_provider.dart';
 import 'screens/admin/admin_main_screen.dart';
 import 'screens/login_screen.dart';
 import 'theme/app_theme.dart';
@@ -32,6 +33,7 @@ void main() async {
         ChangeNotifierProvider(create: (_) => DashboardProvider()),
         ChangeNotifierProvider(create: (_) => AdminUserProvider()),
         ChangeNotifierProvider(create: (_) => PromotionProvider()),
+        ChangeNotifierProvider(create: (_) => WarehouseProvider()),
       ],
       child: const MyApp(),
     ),

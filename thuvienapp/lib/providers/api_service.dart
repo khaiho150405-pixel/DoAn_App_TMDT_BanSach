@@ -10,6 +10,7 @@ import '../models/sach.dart';
 import '../models/danh_gia.dart';
 import '../models/ho_dap.dart';
 import '../models/tin_nhan_ho_tro.dart';
+import '../models/user.dart';
 
 class ApiService {
   static const String baseUrl = 'http://10.0.2.2:5235/api';
@@ -202,6 +203,41 @@ class ApiService {
     }
   }
 
+  Future<User> fetchUserProfile(int maTaiKhoan) async {
+    final response = await http.get(
+      Uri.parse('$baseUrl/auth/Profile/$maTaiKhoan'),
+    );
+    if (response.statusCode == 200) {
+      return User.fromJson(json.decode(response.body));
+    }
+    final error = _tryDecodeMap(response.body);
+    throw Exception(error['message'] ?? 'Khong the tai thong tin tai khoan');
+  }
+
+  Future<User> updateUserProfile({
+    required int maTaiKhoan,
+    required String fullName,
+    required String email,
+    String? soDienThoai,
+    String? diaChiMacDinh,
+  }) async {
+    final response = await http.put(
+      Uri.parse('$baseUrl/auth/Profile/$maTaiKhoan'),
+      headers: {'Content-Type': 'application/json'},
+      body: json.encode({
+        'hoVaTen': fullName,
+        'email': email,
+        'sdt': soDienThoai,
+        'diaChiMacDinh': diaChiMacDinh,
+      }),
+    );
+    if (response.statusCode == 200) {
+      return User.fromJson(json.decode(response.body));
+    }
+    final error = _tryDecodeMap(response.body);
+    throw Exception(error['message'] ?? 'Cap nhat thong tin that bai');
+  }
+
   Future<List<Map<String, dynamic>>> fetchLogs() async {
     final response = await http.get(Uri.parse('$baseUrl/auth/Logs'));
     if (response.statusCode == 200) {
@@ -358,7 +394,8 @@ class ApiService {
 
   Future<List<HoiDap>> fetchSupportTickets(int maKh) async {
     try {
-      final response = await http.get(Uri.parse('$baseUrl/HoiDap/KhachHang/$maKh'));
+      final response =
+          await http.get(Uri.parse('$baseUrl/HoiDap/KhachHang/$maKh'));
       if (response.statusCode == 200) {
         final List jsonResponse = json.decode(response.body);
         return jsonResponse.map((data) => HoiDap.fromJson(data)).toList();
@@ -397,7 +434,8 @@ class ApiService {
 
   Future<List<TinNhanHoTro>> fetchSupportMessages(int maHoiDap) async {
     try {
-      final response = await http.get(Uri.parse('$baseUrl/HoiDap/TinNhan/$maHoiDap'));
+      final response =
+          await http.get(Uri.parse('$baseUrl/HoiDap/TinNhan/$maHoiDap'));
       if (response.statusCode == 200) {
         final List jsonResponse = json.decode(response.body);
         return jsonResponse.map((data) => TinNhanHoTro.fromJson(data)).toList();
@@ -465,7 +503,8 @@ class ApiService {
 
   Future<List<DanhGia>> fetchReviewsByBook(int maSach) async {
     try {
-      final response = await http.get(Uri.parse('$baseUrl/DanhGia/Sach/$maSach'));
+      final response =
+          await http.get(Uri.parse('$baseUrl/DanhGia/Sach/$maSach'));
       if (response.statusCode == 200) {
         final List jsonResponse = json.decode(response.body);
         return jsonResponse.map((data) => DanhGia.fromJson(data)).toList();
@@ -479,7 +518,8 @@ class ApiService {
 
   Future<List<DanhGia>> fetchReviewsByCustomer(int maKh) async {
     try {
-      final response = await http.get(Uri.parse('$baseUrl/DanhGia/KhachHang/$maKh'));
+      final response =
+          await http.get(Uri.parse('$baseUrl/DanhGia/KhachHang/$maKh'));
       if (response.statusCode == 200) {
         final List jsonResponse = json.decode(response.body);
         return jsonResponse.map((data) => DanhGia.fromJson(data)).toList();
@@ -516,7 +556,6 @@ class ApiService {
     }
   }
 
-
   Future<List<Map<String, dynamic>>> fetchNewBooksNews() async {
     try {
       final response = await http.get(Uri.parse('$baseUrl/ThongBao/SachMoi'));
@@ -528,6 +567,166 @@ class ApiService {
     } catch (e) {
       debugPrint('fetchNewBooksNews error: $e');
       return [];
+    }
+  }
+
+  // =========================================================
+  // THỦ KHO — WAREHOUSE APIs
+  // =========================================================
+
+  Future<Map<String, dynamic>> fetchWarehouseDashboard() async {
+    final response = await http.get(Uri.parse('$baseUrl/Kho/Dashboard'));
+    if (response.statusCode == 200) {
+      return json.decode(response.body) as Map<String, dynamic>;
+    }
+    throw Exception('Warehouse dashboard API error: ${response.statusCode}');
+  }
+
+  Future<List<Map<String, dynamic>>> fetchInventory() async {
+    try {
+      final response = await http.get(Uri.parse('$baseUrl/Kho/TonKho'));
+      if (response.statusCode == 200) {
+        final List jsonResponse = json.decode(response.body);
+        return jsonResponse.cast<Map<String, dynamic>>();
+      }
+      throw Exception('Inventory API error: ${response.statusCode}');
+    } catch (e) {
+      debugPrint('fetchInventory error: $e');
+      return [];
+    }
+  }
+
+  Future<List<Map<String, dynamic>>> fetchStockAlerts({int threshold = 10}) async {
+    try {
+      final response = await http.get(
+        Uri.parse('$baseUrl/Kho/CanhBao?threshold=$threshold'),
+      );
+      if (response.statusCode == 200) {
+        final List jsonResponse = json.decode(response.body);
+        return jsonResponse.cast<Map<String, dynamic>>();
+      }
+      throw Exception('Stock alerts API error: ${response.statusCode}');
+    } catch (e) {
+      debugPrint('fetchStockAlerts error: $e');
+      return [];
+    }
+  }
+
+  Future<List<Map<String, dynamic>>> fetchCategories() async {
+    try {
+      final response = await http.get(Uri.parse('$baseUrl/Sach/TheLoai'));
+      if (response.statusCode == 200) {
+        final List jsonResponse = json.decode(response.body);
+        return jsonResponse.cast<Map<String, dynamic>>();
+      }
+      return [];
+    } catch (e) {
+      debugPrint('fetchCategories error: $e');
+      return [];
+    }
+  }
+
+  Future<List<Map<String, dynamic>>> fetchAuthorList() async {
+    try {
+      final response = await http.get(Uri.parse('$baseUrl/Sach/TacGiaList'));
+      if (response.statusCode == 200) {
+        final List jsonResponse = json.decode(response.body);
+        return jsonResponse.cast<Map<String, dynamic>>();
+      }
+      return [];
+    } catch (e) {
+      debugPrint('fetchAuthorList error: $e');
+      return [];
+    }
+  }
+
+  Future<List<Map<String, dynamic>>> fetchPublisherList() async {
+    try {
+      final response =
+          await http.get(Uri.parse('$baseUrl/Sach/NhaXuatBanList'));
+      if (response.statusCode == 200) {
+        final List jsonResponse = json.decode(response.body);
+        return jsonResponse.cast<Map<String, dynamic>>();
+      }
+      return [];
+    } catch (e) {
+      debugPrint('fetchPublisherList error: $e');
+      return [];
+    }
+  }
+
+  Future<Map<String, dynamic>> updateBook(
+      int id, Map<String, dynamic> data) async {
+    try {
+      final response = await http.put(
+        Uri.parse('$baseUrl/Sach/CapNhat/$id'),
+        headers: {'Content-Type': 'application/json'},
+        body: json.encode(data),
+      );
+      final result = _tryDecodeMap(response.body);
+      return {'success': response.statusCode == 200, ...result};
+    } catch (e) {
+      debugPrint('updateBook error: $e');
+      return {'success': false, 'message': 'Không thể kết nối server!'};
+    }
+  }
+
+  Future<Map<String, dynamic>> deleteBook(int id) async {
+    try {
+      final response =
+          await http.delete(Uri.parse('$baseUrl/Sach/Xoa/$id'));
+      final result = _tryDecodeMap(response.body);
+      return {'success': response.statusCode == 200, ...result};
+    } catch (e) {
+      debugPrint('deleteBook error: $e');
+      return {'success': false, 'message': 'Không thể kết nối server!'};
+    }
+  }
+
+  Future<List<Map<String, dynamic>>> fetchImportReceipts({int? maNv}) async {
+    try {
+      final uri = maNv != null
+          ? '$baseUrl/PhieuNhap/DanhSach?maNv=$maNv'
+          : '$baseUrl/PhieuNhap/DanhSach';
+      final response = await http.get(Uri.parse(uri));
+      if (response.statusCode == 200) {
+        final List jsonResponse = json.decode(response.body);
+        return jsonResponse.cast<Map<String, dynamic>>();
+      }
+      return [];
+    } catch (e) {
+      debugPrint('fetchImportReceipts error: $e');
+      return [];
+    }
+  }
+
+  Future<Map<String, dynamic>?> fetchImportReceiptDetail(int mapn) async {
+    try {
+      final response =
+          await http.get(Uri.parse('$baseUrl/PhieuNhap/ChiTiet/$mapn'));
+      if (response.statusCode == 200) {
+        return json.decode(response.body) as Map<String, dynamic>;
+      }
+      return null;
+    } catch (e) {
+      debugPrint('fetchImportReceiptDetail error: $e');
+      return null;
+    }
+  }
+
+  Future<Map<String, dynamic>> createImportReceipt(
+      Map<String, dynamic> data) async {
+    try {
+      final response = await http.post(
+        Uri.parse('$baseUrl/PhieuNhap/Tao'),
+        headers: {'Content-Type': 'application/json'},
+        body: json.encode(data),
+      );
+      final result = _tryDecodeMap(response.body);
+      return {'success': response.statusCode == 200, ...result};
+    } catch (e) {
+      debugPrint('createImportReceipt error: $e');
+      return {'success': false, 'message': 'Không thể kết nối server!'};
     }
   }
 

@@ -1,8 +1,12 @@
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
+import 'package:provider/provider.dart';
 
 import '../../providers/api_service.dart';
+import '../../providers/user_provider.dart';
 import '../../widgets/admin/admin_app_bar_title.dart';
+import '../login_screen.dart';
+import 'user_management_screen.dart';
 
 class AdminSettingsScreen extends StatefulWidget {
   const AdminSettingsScreen({super.key});
@@ -15,6 +19,14 @@ class _AdminSettingsScreenState extends State<AdminSettingsScreen> {
   bool _isDarkMode = false;
 
   void _showChangePasswordDialog() {
+    final currentUser = context.read<UserProvider>().user;
+    if (currentUser == null) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('Phiên đăng nhập đã hết hạn.')),
+      );
+      return;
+    }
+
     final formKey = GlobalKey<FormState>();
     String oldPw = '', newPw = '';
     bool isSubmitting = false;
@@ -131,8 +143,10 @@ class _AdminSettingsScreenState extends State<AdminSettingsScreen> {
                                       setDialogState(() => isSubmitting = true);
 
                                       try {
-                                        await ApiService()
-                                            .changePassword(1, oldPw, newPw);
+                                        await ApiService().changePassword(
+                                            currentUser.maTaiKhoan,
+                                            oldPw,
+                                            newPw);
                                         if (ctx.mounted) {
                                           Navigator.pop(ctx);
                                           ScaffoldMessenger.of(context)
@@ -148,7 +162,8 @@ class _AdminSettingsScreenState extends State<AdminSettingsScreen> {
                                               .showSnackBar(
                                             SnackBar(
                                                 content: Text(e.toString()),
-                                                backgroundColor: Colors.red),
+                                                backgroundColor:
+                                                    const Color(0xFFEA580C)),
                                           );
                                         }
                                       } finally {
@@ -198,35 +213,53 @@ class _AdminSettingsScreenState extends State<AdminSettingsScreen> {
   void _showLogoutDialog() {
     showDialog(
       context: context,
-      builder: (ctx) {
-        return AlertDialog(
-          shape:
-              RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
-          title: const Text('Đăng xuất'),
-          content: const Text('Bạn có chắc chắn muốn đăng xuất khỏi hệ thống?'),
-          actions: [
-            TextButton(
-              onPressed: () => Navigator.pop(ctx),
-              child: const Text('Hủy', style: TextStyle(color: Colors.grey)),
+      builder: (ctx) => AlertDialog(
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+        title: const Text(
+          'Xác nhận đăng xuất',
+          style:
+              TextStyle(fontWeight: FontWeight.bold, color: Color(0xFF1F2937)),
+        ),
+        content: const Text(
+          'Bạn có chắc chắn muốn đăng xuất không?',
+          style: TextStyle(color: Color(0xFF4B5563)),
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(ctx),
+            child: const Text(
+              'Hủy',
+              style: TextStyle(
+                  color: Color(0xFF6B7280), fontWeight: FontWeight.w600),
             ),
-            ElevatedButton(
-              onPressed: () {
-                Navigator.pop(ctx);
-                // TODO: Clear token / shared preferences
-                ScaffoldMessenger.of(context).showSnackBar(
-                  const SnackBar(
-                      content: Text('Đã đăng xuất! (Demo - chưa có token)')),
-                );
-              },
-              style: ElevatedButton.styleFrom(
-                backgroundColor: Colors.red,
-                foregroundColor: Colors.white,
+          ),
+          ElevatedButton(
+            onPressed: () {
+              Navigator.pop(ctx);
+              context.read<UserProvider>().logout();
+              ScaffoldMessenger.of(context).showSnackBar(
+                const SnackBar(content: Text('Đã đăng xuất thành công!')),
+              );
+              Navigator.pushAndRemoveUntil(
+                context,
+                MaterialPageRoute(builder: (_) => const LoginScreen()),
+                (route) => false,
+              );
+            },
+            style: ElevatedButton.styleFrom(
+              backgroundColor: const Color(0xFFEA580C),
+              foregroundColor: Colors.white,
+              shape: RoundedRectangleBorder(
+                borderRadius: BorderRadius.circular(8),
               ),
-              child: const Text('Đăng xuất'),
             ),
-          ],
-        );
-      },
+            child: const Text(
+              'Đăng xuất',
+              style: TextStyle(fontWeight: FontWeight.bold),
+            ),
+          ),
+        ],
+      ),
     );
   }
 
@@ -283,19 +316,20 @@ class _AdminSettingsScreenState extends State<AdminSettingsScreen> {
                     ),
                     _SettingsTile(
                       icon: Icons.dark_mode_outlined,
-                      iconColor: const Color(0xFF8B5CF6),
+                      iconColor: const Color(0xFF2563EB),
                       title: 'Chế độ tối',
                       subtitle: _isDarkMode ? 'Đang bật' : 'Đang tắt',
                       trailing: Switch(
                         value: _isDarkMode,
-                        activeColor: const Color(0xFF8B5CF6),
+                        activeThumbColor: const Color(0xFF2563EB),
+                        activeTrackColor: const Color(0xFFEFF6FF),
                         onChanged: (val) {
                           setState(() => _isDarkMode = val);
                           ScaffoldMessenger.of(context).showSnackBar(
                             SnackBar(
                               content: Text(val
-                                  ? 'Chế độ tối đã bật (Demo)'
-                                  : 'Chế độ tối đã tắt (Demo)'),
+                                  ? 'Chế độ tối đã bật'
+                                  : 'Chế độ tối đã tắt'),
                               duration: const Duration(seconds: 1),
                             ),
                           );
@@ -323,7 +357,7 @@ class _AdminSettingsScreenState extends State<AdminSettingsScreen> {
                   _buildSettingsCard([
                     _SettingsTile(
                       icon: Icons.info_outline,
-                      iconColor: Colors.grey,
+                      iconColor: const Color(0xFF2563EB),
                       title: 'Phiên bản ứng dụng',
                       subtitle: 'v1.0.0',
                       onTap: () {},
@@ -331,20 +365,25 @@ class _AdminSettingsScreenState extends State<AdminSettingsScreen> {
                   ]),
                   const SizedBox(height: 24),
 
-                  // --- Nút Đăng xuất ---
+                  // --- Outlined Logout Button ---
                   SizedBox(
                     width: double.infinity,
-                    child: ElevatedButton.icon(
+                    child: OutlinedButton.icon(
                       onPressed: _showLogoutDialog,
                       icon: const Icon(Icons.logout),
-                      label: const Text('Đăng xuất',
-                          style: TextStyle(fontWeight: FontWeight.bold)),
-                      style: ElevatedButton.styleFrom(
-                        backgroundColor: Colors.red,
-                        foregroundColor: Colors.white,
+                      label: const Text(
+                        'Đăng xuất',
+                        style: TextStyle(
+                            fontWeight: FontWeight.bold, fontSize: 16),
+                      ),
+                      style: OutlinedButton.styleFrom(
+                        foregroundColor: const Color(0xFFEA580C),
+                        side: const BorderSide(
+                            color: Color(0xFFEA580C), width: 1.5),
                         padding: const EdgeInsets.symmetric(vertical: 14),
                         shape: RoundedRectangleBorder(
-                            borderRadius: BorderRadius.circular(12)),
+                          borderRadius: BorderRadius.circular(12),
+                        ),
                       ),
                     ),
                   ),
@@ -359,7 +398,13 @@ class _AdminSettingsScreenState extends State<AdminSettingsScreen> {
   }
 
   Widget _buildProfileCard() {
+    final user = context.watch<UserProvider>().user;
+    final displayName = user?.fullName ?? 'Admin';
+    final roleName = user?.roleName ?? 'Quản trị viên hệ thống';
+
     return Card(
+      color: Colors.white,
+      surfaceTintColor: Colors.white,
       elevation: 1,
       shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
       child: Padding(
@@ -373,10 +418,10 @@ class _AdminSettingsScreenState extends State<AdminSettingsScreen> {
                 color: const Color(0xFF2563EB),
                 borderRadius: BorderRadius.circular(16),
               ),
-              child: const Center(
+              child: Center(
                 child: Text(
-                  'A',
-                  style: TextStyle(
+                  displayName.isNotEmpty ? displayName[0].toUpperCase() : 'A',
+                  style: const TextStyle(
                     color: Colors.white,
                     fontSize: 24,
                     fontWeight: FontWeight.bold,
@@ -385,32 +430,35 @@ class _AdminSettingsScreenState extends State<AdminSettingsScreen> {
               ),
             ),
             const SizedBox(width: 16),
-            const Expanded(
+            Expanded(
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
                   Text(
-                    'Admin',
-                    style: TextStyle(
+                    displayName,
+                    style: const TextStyle(
                       fontSize: 18,
                       fontWeight: FontWeight.bold,
                       color: Color(0xFF1F2937),
                     ),
                   ),
-                  SizedBox(height: 4),
+                  const SizedBox(height: 4),
                   Text(
-                    'Quản trị viên hệ thống',
-                    style: TextStyle(color: Colors.grey, fontSize: 13),
+                    roleName,
+                    style:
+                        const TextStyle(color: Color(0xFF6B7280), fontSize: 13),
                   ),
                 ],
               ),
             ),
             IconButton(
               onPressed: () {
-                ScaffoldMessenger.of(context).showSnackBar(
-                  const SnackBar(
-                      content:
-                          Text('Tính năng chỉnh sửa profile đang phát triển')),
+                if (user == null) return;
+                Navigator.push(
+                  context,
+                  MaterialPageRoute(
+                    builder: (_) => UserManagementScreen(currentUser: user),
+                  ),
                 );
               },
               icon: const Icon(Icons.edit_outlined,
@@ -431,7 +479,7 @@ class _AdminSettingsScreenState extends State<AdminSettingsScreen> {
         style: const TextStyle(
           fontSize: 13,
           fontWeight: FontWeight.w600,
-          color: Colors.grey,
+          color: Color(0xFF6B7280),
           letterSpacing: 0.5,
         ),
       ),
@@ -440,6 +488,8 @@ class _AdminSettingsScreenState extends State<AdminSettingsScreen> {
 
   Widget _buildSettingsCard(List<_SettingsTile> tiles) {
     return Card(
+      color: Colors.white,
+      surfaceTintColor: Colors.white,
       elevation: 1,
       shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
       child: Column(
@@ -454,7 +504,7 @@ class _AdminSettingsScreenState extends State<AdminSettingsScreen> {
                   width: 40,
                   height: 40,
                   decoration: BoxDecoration(
-                    color: tile.iconColor.withOpacity(0.1),
+                    color: tile.iconColor.withValues(alpha: 0.1),
                     borderRadius: BorderRadius.circular(10),
                   ),
                   child: Icon(tile.icon, color: tile.iconColor, size: 22),
@@ -463,13 +513,14 @@ class _AdminSettingsScreenState extends State<AdminSettingsScreen> {
                     style: const TextStyle(
                         fontWeight: FontWeight.w600, fontSize: 15)),
                 subtitle: Text(tile.subtitle,
-                    style: const TextStyle(color: Colors.grey, fontSize: 12)),
+                    style: const TextStyle(
+                        color: Color(0xFF6B7280), fontSize: 12)),
                 trailing: tile.trailing ??
-                    const Icon(Icons.chevron_right, color: Colors.grey),
+                    const Icon(Icons.chevron_right, color: Color(0xFF6B7280)),
                 onTap: tile.onTap,
               ),
               if (i < tiles.length - 1)
-                Divider(height: 1, indent: 72, color: Colors.grey[200]),
+                const Divider(height: 1, indent: 72, color: Color(0xFFE5E7EB)),
             ],
           );
         }),
@@ -597,6 +648,8 @@ class _SystemLogsScreenState extends State<_SystemLogsScreen> {
                                 : '';
 
                             return Card(
+                              color: Colors.white,
+                              surfaceTintColor: Colors.white,
                               margin: const EdgeInsets.only(bottom: 8),
                               elevation: 1,
                               shape: RoundedRectangleBorder(
@@ -626,11 +679,13 @@ class _SystemLogsScreenState extends State<_SystemLogsScreen> {
                                     const SizedBox(height: 4),
                                     Text(log['detail'] ?? '',
                                         style: const TextStyle(
-                                            fontSize: 12, color: Colors.grey)),
+                                            fontSize: 12,
+                                            color: Color(0xFF6B7280))),
                                     const SizedBox(height: 2),
                                     Text(timeStr,
                                         style: const TextStyle(
-                                            fontSize: 11, color: Colors.grey)),
+                                            fontSize: 11,
+                                            color: Color(0xFF6B7280))),
                                   ],
                                 ),
                               ),

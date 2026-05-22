@@ -178,6 +178,92 @@ namespace BookStoreAPI.Controllers
         }
 
         // 3. ĐỔI MẬT KHẨU
+        [HttpGet("Profile/{maTaiKhoan}")]
+        public async Task<IActionResult> GetProfile(int maTaiKhoan)
+        {
+            var user = await _context.Taikhoans
+                .Include(t => t.MaquyenNavigation)
+                .Include(t => t.Khachhang)
+                .Include(t => t.Nhanvien)
+                .FirstOrDefaultAsync(t => t.Mataikhoan == maTaiKhoan);
+
+            if (user == null)
+                return NotFound(new { message = "Tài khoản không tồn tại!" });
+
+            return Ok(ToUserProfileResponse(user));
+        }
+
+        [HttpPut("Profile/{maTaiKhoan}")]
+        public async Task<IActionResult> UpdateProfile(int maTaiKhoan, [FromBody] UpdateProfileRequest request)
+        {
+            var user = await _context.Taikhoans
+                .Include(t => t.MaquyenNavigation)
+                .Include(t => t.Khachhang)
+                .Include(t => t.Nhanvien)
+                .FirstOrDefaultAsync(t => t.Mataikhoan == maTaiKhoan);
+
+            if (user == null)
+                return NotFound(new { message = "Tài khoản không tồn tại!" });
+
+            if (string.IsNullOrWhiteSpace(request.HoVaTen))
+                return BadRequest(new { message = "Họ và tên không được để trống!" });
+
+            if (string.IsNullOrWhiteSpace(request.Email))
+                return BadRequest(new { message = "Email không được để trống!" });
+
+            try
+            {
+                var addr = new System.Net.Mail.MailAddress(request.Email.Trim());
+                if (addr.Address != request.Email.Trim() || !request.Email.Contains("."))
+                    return BadRequest(new { message = "Email không đúng định dạng!" });
+            }
+            catch
+            {
+                return BadRequest(new { message = "Email không đúng định dạng!" });
+            }
+
+            var phone = request.Sdt?.Trim();
+            if (!string.IsNullOrWhiteSpace(phone) &&
+                !System.Text.RegularExpressions.Regex.IsMatch(phone, @"^\d{9,11}$"))
+            {
+                return BadRequest(new { message = "Số điện thoại chỉ chứa số và dài từ 9 đến 11 ký tự!" });
+            }
+
+            var email = request.Email.Trim();
+            var emailExists = await _context.Taikhoans.AnyAsync(t => t.Mataikhoan != maTaiKhoan && t.Email == email)
+                || await _context.Khachhangs.AnyAsync(k => k.Mataikhoan != maTaiKhoan && k.Email == email)
+                || await _context.Nhanviens.AnyAsync(n => n.Mataikhoan != maTaiKhoan && n.Email == email);
+
+            if (emailExists)
+                return BadRequest(new { message = "Email đã được sử dụng bởi tài khoản khác!" });
+
+            user.Email = email;
+
+            if (user.Maquyen == 4)
+            {
+                if (user.Khachhang == null)
+                    return BadRequest(new { message = "Không tìm thấy hồ sơ khách hàng!" });
+
+                user.Khachhang.Hovaten = request.HoVaTen.Trim();
+                user.Khachhang.Email = email;
+                user.Khachhang.Sdt = phone;
+                user.Khachhang.Diachimacdinh = request.DiaChiMacDinh?.Trim();
+            }
+            else
+            {
+                if (user.Nhanvien == null)
+                    return BadRequest(new { message = "Không tìm thấy hồ sơ nhân viên!" });
+
+                user.Nhanvien.Hovaten = request.HoVaTen.Trim();
+                user.Nhanvien.Email = email;
+                user.Nhanvien.Sdt = phone;
+            }
+
+            await _context.SaveChangesAsync();
+
+            return Ok(ToUserProfileResponse(user));
+        }
+
         [HttpPut("ChangePassword")]
         public async Task<IActionResult> ChangePassword([FromBody] ChangePasswordRequest request)
         {
@@ -214,6 +300,29 @@ namespace BookStoreAPI.Controllers
 
             return Ok(logs);
         }
+
+        private static object ToUserProfileResponse(Taikhoan user)
+    {
+        var isCustomer = user.Maquyen == 4;
+        var fullName = isCustomer ? user.Khachhang?.Hovaten : user.Nhanvien?.Hovaten;
+        var realId = isCustomer ? user.Khachhang?.Makh : user.Nhanvien?.Manv;
+        var phone = isCustomer ? user.Khachhang?.Sdt : user.Nhanvien?.Sdt;
+        var email = isCustomer ? user.Khachhang?.Email : user.Nhanvien?.Email;
+
+        return new
+        {
+            maTaiKhoan = user.Mataikhoan,
+            tenDangNhap = user.Tendangnhap,
+            roleId = user.Maquyen,
+            roleName = user.MaquyenNavigation?.Tenquyen,
+            realId = realId ?? 0,
+            fullName = fullName ?? "Người dùng",
+            sdt = phone,
+            diaChiMacDinh = user.Khachhang?.Diachimacdinh,
+            email = string.IsNullOrWhiteSpace(email) ? user.Email : email
+        };
+    }
+
     }
 
     public class RegisterRequest
@@ -232,6 +341,14 @@ namespace BookStoreAPI.Controllers
     {
         public string TenDangNhap { get; set; } = null!;
         public string MatKhau { get; set; } = null!;
+    }
+
+    public class UpdateProfileRequest
+    {
+        public string HoVaTen { get; set; } = null!;
+        public string Email { get; set; } = null!;
+        public string? Sdt { get; set; }
+        public string? DiaChiMacDinh { get; set; }
     }
 
     public class ChangePasswordRequest

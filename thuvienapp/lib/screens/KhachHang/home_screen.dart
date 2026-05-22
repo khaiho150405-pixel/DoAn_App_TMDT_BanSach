@@ -6,6 +6,7 @@ import '../../theme/app_theme.dart';
 import '../../models/user.dart';
 import '../../providers/api_service.dart';
 import '../../providers/cart_provider.dart';
+import '../../providers/user_provider.dart';
 
 // Import các màn hình
 import '../login_screen.dart';
@@ -21,7 +22,7 @@ class HomeScreen extends StatefulWidget {
   const HomeScreen({super.key, this.user});
 
   @override
-  _HomeScreenState createState() => _HomeScreenState();
+  State<HomeScreen> createState() => _HomeScreenState();
 }
 
 class _HomeScreenState extends State<HomeScreen> {
@@ -45,7 +46,7 @@ class _HomeScreenState extends State<HomeScreen> {
         });
       }
     } catch (e) {
-      print("Lỗi tải thông báo: $e");
+      debugPrint("Lỗi tải thông báo: $e");
     }
   }
 
@@ -75,20 +76,21 @@ class _HomeScreenState extends State<HomeScreen> {
 
   @override
   Widget build(BuildContext context) {
-    final bool isGuest = widget.user == null;
+    final currentUser = context.watch<UserProvider>().user ?? widget.user;
+    final bool isGuest = currentUser == null;
     final String avatarLabel =
-        isGuest ? "?" : _getAvatarLetter(widget.user!.fullName);
+        isGuest ? "?" : _getAvatarLetter(currentUser.fullName);
 
     // Cấu hình danh sách các Tab
     final List<Widget> widgetOptions = [
       // TAB 0: Trang Chủ (Công khai - ai cũng xem được)
-      TabTrangChu(user: widget.user),
+      TabTrangChu(user: currentUser),
 
       // TAB 1: Danh Mục / Sách (Công khai)
-      TabDanhMuc(user: widget.user),
+      TabDanhMuc(user: currentUser),
 
       // TAB 2: Cá Nhân (Đã xử lý guest bên trong TabCaNhan)
-      TabCaNhan(user: widget.user),
+      TabCaNhan(user: currentUser),
     ];
 
     return Scaffold(
@@ -109,7 +111,8 @@ class _HomeScreenState extends State<HomeScreen> {
                 decoration: BoxDecoration(
                   shape: BoxShape.circle,
                   border: Border.all(
-                      color: AppColors.primaryBlue.withOpacity(0.5), width: 2),
+                      color: AppColors.primaryBlue.withValues(alpha: 0.5),
+                      width: 2),
                 ),
                 child: CircleAvatar(
                   backgroundColor:
@@ -218,7 +221,7 @@ class _HomeScreenState extends State<HomeScreen> {
                       Navigator.push(
                         context,
                         MaterialPageRoute(
-                            builder: (_) => GioHangScreen(user: widget.user!)),
+                            builder: (_) => GioHangScreen(user: currentUser)),
                       );
                     }
                   },
