@@ -31,6 +31,8 @@ public partial class BookStoreContext : DbContext
 
     public virtual DbSet<Khachhang> Khachhangs { get; set; }
 
+    public virtual DbSet<Tinnhanhotro> Tinnhanhotros { get; set; }
+
     public virtual DbSet<Khuyenmai> Khuyenmais { get; set; }
 
     public virtual DbSet<Nhanvien> Nhanviens { get; set; }
@@ -239,30 +241,64 @@ public partial class BookStoreContext : DbContext
             entity.ToTable("HOIDAP");
 
             entity.Property(e => e.Mahoidap).HasColumnName("MAHOIDAP");
-            entity.Property(e => e.Cauhoi).HasColumnName("CAUHOI");
             entity.Property(e => e.Makh).HasColumnName("MAKH");
-            entity.Property(e => e.Manv).HasColumnName("MANV");
-            entity.Property(e => e.Thoigianhoi)
-                .HasDefaultValueSql("(getdate())")
-                .HasColumnType("datetime")
-                .HasColumnName("THOIGIANHOI");
-            entity.Property(e => e.Thoigiantraloi)
-                .HasColumnType("datetime")
-                .HasColumnName("THOIGIANTRALOI");
-            entity.Property(e => e.Traloi).HasColumnName("TRALOI");
+            entity.Property(e => e.Tieude).HasMaxLength(255).HasColumnName("TIEUDE");
+            entity.Property(e => e.Noidung).HasColumnName("NOIDUNG");
+            entity.Property(e => e.Loaihotro).HasMaxLength(50).HasColumnName("LOAIHOTRO");
             entity.Property(e => e.Trangthai)
                 .HasMaxLength(50)
                 .HasDefaultValue("Chờ trả lời")
                 .HasColumnName("TRANGTHAI");
+            entity.Property(e => e.Thoigiantao)
+                .HasDefaultValueSql("(getdate())")
+                .HasColumnType("datetime")
+                .HasColumnName("THOIGIANTAO");
+            entity.Property(e => e.Capnhatcuoi)
+                .HasColumnType("datetime")
+                .HasColumnName("CAPNHATCUOI");
+            entity.Property(e => e.Manvphutrach).HasColumnName("MANVPHUTRACH");
 
             entity.HasOne(d => d.MakhNavigation).WithMany(p => p.Hoidaps)
                 .HasForeignKey(d => d.Makh)
                 .OnDelete(DeleteBehavior.ClientSetNull)
                 .HasConstraintName("FK_HOIDAP_KH");
 
-            entity.HasOne(d => d.ManvNavigation).WithMany(p => p.Hoidaps)
-                .HasForeignKey(d => d.Manv)
+            entity.HasOne(d => d.ManvphutrachNavigation).WithMany(p => p.Hoidaps)
+                .HasForeignKey(d => d.Manvphutrach)
                 .HasConstraintName("FK_HOIDAP_NV");
+        });
+
+        modelBuilder.Entity<Tinnhanhotro>(entity =>
+        {
+            entity.HasKey(e => e.Matinnhan).HasName("PK__TINNHANH__FE49F88DDE827586");
+
+            entity.ToTable("TINNHANHOTRO", tb => tb.HasTrigger("TG_CAPNHAT_HOIDAP_LASTUPDATE"));
+
+            entity.Property(e => e.Matinnhan).HasColumnName("MATINNHAN");
+            entity.Property(e => e.Mahoidap).HasColumnName("MAHOIDAP");
+            entity.Property(e => e.Nguoigui).HasMaxLength(20).HasColumnName("NGUOIGUI");
+            entity.Property(e => e.Makh).HasColumnName("MAKH");
+            entity.Property(e => e.Manv).HasColumnName("MANV");
+            entity.Property(e => e.Noidung).HasColumnName("NOIDUNG");
+            entity.Property(e => e.Hinhanh).HasMaxLength(255).IsUnicode(false).HasColumnName("HINHANH");
+            entity.Property(e => e.Daxem).HasColumnName("DAXEM").HasDefaultValue(false);
+            entity.Property(e => e.Thoigian)
+                .HasDefaultValueSql("(getdate())")
+                .HasColumnType("datetime")
+                .HasColumnName("THOIGIAN");
+
+            entity.HasOne(d => d.MahoidapNavigation).WithMany(p => p.Tinnhanhotros)
+                .HasForeignKey(d => d.Mahoidap)
+                .OnDelete(DeleteBehavior.Cascade)
+                .HasConstraintName("FK_TINNHAN_HOIDAP");
+
+            entity.HasOne(d => d.MakhNavigation).WithMany()
+                .HasForeignKey(d => d.Makh)
+                .HasConstraintName("FK_TINNHAN_KHACHHANG");
+
+            entity.HasOne(d => d.ManvNavigation).WithMany()
+                .HasForeignKey(d => d.Manv)
+                .HasConstraintName("FK_TINNHAN_NHANVIEN");
         });
 
         modelBuilder.Entity<Khachhang>(entity =>

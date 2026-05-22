@@ -3,8 +3,10 @@ import 'package:provider/provider.dart';
 import 'package:cached_network_image/cached_network_image.dart';
 import 'package:carousel_slider/carousel_slider.dart';
 import 'package:flutter_rating_bar/flutter_rating_bar.dart';
+import 'package:intl/intl.dart';
 import '../../models/sach.dart';
 import '../../models/user.dart';
+import '../../models/danh_gia.dart';
 import '../../providers/api_service.dart';
 import '../../providers/cart_provider.dart';
 import '../login_screen.dart';
@@ -31,6 +33,78 @@ class _BookDetailScreenState extends State<BookDetailScreen> {
   // Màu chủ đạo trắng, xanh dương
   final Color primaryBlue = AppColors.primaryBlue;
   final Color backgroundWhite = AppColors.backgroundWhite;
+
+  List<DanhGia> _reviews = [];
+  bool _isReviewsLoading = true;
+  DanhGia? _myExistingReview;
+  final ApiService _apiService = ApiService();
+
+  @override
+  void initState() {
+    super.initState();
+    _loadReviews();
+  }
+
+  Future<void> _loadReviews() async {
+    setState(() => _isReviewsLoading = true);
+    final data = await _apiService.fetchReviewsByBook(widget.sach.maSach);
+    
+    // Tìm đánh giá của người dùng hiện tại (nếu đã đăng nhập)
+    DanhGia? myRev;
+    if (widget.user != null) {
+      final myId = widget.user!.realId;
+      for (var r in data) {
+        if (r.maKhachHang == myId) {
+          myRev = r;
+          break;
+        }
+      }
+    }
+
+    if (mounted) {
+      setState(() {
+        _reviews = data;
+        _myExistingReview = myRev;
+        _isReviewsLoading = false;
+      });
+    }
+  }
+
+  Color _getAvatarColor(String name) {
+    final hash = name.hashCode;
+    final index = hash.abs() % 5;
+    final List<Color> colors = [
+      const Color(0xFFEFF6FF), // Blue
+      const Color(0xFFECFDF5), // Green
+      const Color(0xFFFEF3C7), // Amber
+      const Color(0xFFFDF2F8), // Pink
+      const Color(0xFFF5F3FF), // Purple
+    ];
+    return colors[index];
+  }
+
+  Color _getAvatarTextColor(String name) {
+    final hash = name.hashCode;
+    final index = hash.abs() % 5;
+    final List<Color> colors = [
+      const Color(0xFF2563EB),
+      const Color(0xFF059669),
+      const Color(0xFFD97706),
+      const Color(0xFFDB2777),
+      const Color(0xFF7C3AED),
+    ];
+    return colors[index];
+  }
+
+  Map<int, int> get _ratingDistribution {
+    final dist = {5: 0, 4: 0, 3: 0, 2: 0, 1: 0};
+    for (var r in _reviews) {
+      if (r.diem >= 1 && r.diem <= 5) {
+        dist[r.diem] = dist[r.diem]! + 1;
+      }
+    }
+    return dist;
+  }
 
   String _fmt(double p) => p.toStringAsFixed(0).replaceAllMapped(
       RegExp(r'(\d{1,3})(?=(\d{3})+(?!\d))'), (m) => '${m[1]}.');
@@ -68,8 +142,13 @@ class _BookDetailScreenState extends State<BookDetailScreen> {
   @override
   Widget build(BuildContext context) {
     final s = widget.sach;
-    final mockRating = s.danhGiaSao ?? 4.5;
-    final mockRatingCount = s.soLuongDanhGia ?? 128;
+    
+    // TÍNH TOÁN RATING THỰC TẾ TỪ DATABASE
+    final double rating = _reviews.isEmpty
+        ? 0.0
+        : _reviews.fold<int>(0, (sum, r) => sum + r.diem) / _reviews.length;
+    final int ratingCount = _reviews.length;
+    
     final mockStock = s.soLuongTonKho ?? 99;
 
     return Scaffold(
@@ -124,7 +203,7 @@ class _BookDetailScreenState extends State<BookDetailScreen> {
           _buildImageSection(),
           const SizedBox(height: 8),
           // === GIÁ & TÊN ===
-          _buildPriceSection(s, mockRating, mockRatingCount),
+          _buildPriceSection(s, rating, ratingCount),
           const SizedBox(height: 8),
           // === THÔNG TIN CHI TIẾT ===
           _buildInfoSection(s, mockStock),
@@ -133,7 +212,7 @@ class _BookDetailScreenState extends State<BookDetailScreen> {
           _buildDescriptionSection(s),
           const SizedBox(height: 8),
           // === ĐÁNH GIÁ ===
-          _buildRatingSection(mockRating, mockRatingCount),
+          _buildRatingSection(rating, ratingCount),
           const SizedBox(height: 80),
         ]))),
         // === BOTTOM BAR ===
@@ -349,6 +428,8 @@ class _BookDetailScreenState extends State<BookDetailScreen> {
 
   // ================ ĐÁNH GIÁ ================
   Widget _buildRatingSection(double rating, int count) {
+    final dist = _ratingDistribution;
+
     return Container(
         color: backgroundWhite,
         padding: const EdgeInsets.all(16),
@@ -388,15 +469,8 @@ class _BookDetailScreenState extends State<BookDetailScreen> {
                 child: Column(
                     children: List.generate(5, (i) {
               final star = 5 - i;
-              final pct = star == 5
-                  ? 0.6
-                  : star == 4
-                      ? 0.25
-                      : star == 3
-                          ? 0.1
-                          : star == 2
-                              ? 0.03
-                              : 0.02;
+              final countStar = dist[star] ?? 0;
+              final pct = count > 0 ? countStar / count : 0.0;
               return Padding(
                   padding: const EdgeInsets.only(bottom: 6),
                   child: Row(children: [
@@ -420,8 +494,423 @@ class _BookDetailScreenState extends State<BookDetailScreen> {
                   ]));
             }))),
           ]),
+          
+          const SizedBox(height: 24),
+          Row(
+            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+            children: [
+              Text(
+                'Nhận xét từ khách hàng ($count)',
+                style: const TextStyle(
+                  fontSize: 15,
+                  fontWeight: FontWeight.bold,
+                  color: Colors.black87,
+                ),
+              ),
+              OutlinedButton.icon(
+                onPressed: _hienThiFormDanhGia,
+                icon: Icon(
+                  _myExistingReview != null ? Icons.edit_note : Icons.rate_review_outlined,
+                  size: 18,
+                  color: primaryBlue,
+                ),
+                label: Text(
+                  _myExistingReview != null ? 'Sửa đánh giá' : 'Viết đánh giá',
+                  style: TextStyle(
+                    color: primaryBlue,
+                    fontWeight: FontWeight.bold,
+                    fontSize: 13,
+                  ),
+                ),
+                style: OutlinedButton.styleFrom(
+                  side: BorderSide(color: primaryBlue, width: 1.2),
+                  shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(20),
+                  ),
+                  padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+                ),
+              ),
+            ],
+          ),
+          const SizedBox(height: 16),
+          
+          if (_isReviewsLoading)
+            Padding(
+              padding: const EdgeInsets.symmetric(vertical: 24),
+              child: Center(
+                child: CircularProgressIndicator(color: primaryBlue, strokeWidth: 2),
+              ),
+            )
+          else if (_reviews.isEmpty)
+            Container(
+              width: double.infinity,
+              padding: const EdgeInsets.symmetric(vertical: 32, horizontal: 16),
+              decoration: BoxDecoration(
+                color: Colors.grey[50],
+                borderRadius: BorderRadius.circular(12),
+                border: Border.all(color: Colors.grey[100]!),
+              ),
+              child: Column(
+                children: [
+                  Icon(Icons.rate_review_outlined, size: 48, color: Colors.grey[350]),
+                  const SizedBox(height: 12),
+                  const Text(
+                    'Chưa có đánh giá nào cho cuốn sách này',
+                    style: TextStyle(
+                      fontSize: 14,
+                      fontWeight: FontWeight.w600,
+                      color: Colors.black54,
+                    ),
+                  ),
+                  const SizedBox(height: 4),
+                  Text(
+                    'Hãy là người đầu tiên mua và chia sẻ nhận xét của bạn!',
+                    style: TextStyle(
+                      fontSize: 12,
+                      color: Colors.grey[500],
+                    ),
+                    textAlign: TextAlign.center,
+                  ),
+                ],
+              ),
+            )
+          else
+            Column(
+              children: _reviews.map((r) => _buildReviewItem(r)).toList(),
+            ),
         ]));
   }
+
+  Widget _buildReviewItem(DanhGia review) {
+    final avatarColor = _getAvatarColor(review.tenKhachHang);
+    final avatarTextColor = _getAvatarTextColor(review.tenKhachHang);
+    final firstLetter = review.tenKhachHang.isNotEmpty ? review.tenKhachHang[0].toUpperCase() : '?';
+    final formattedTime = DateFormat('dd/MM/yyyy HH:mm').format(review.thoiGian);
+
+    return Container(
+      padding: const EdgeInsets.symmetric(vertical: 12),
+      decoration: BoxDecoration(
+        border: Border(
+          bottom: BorderSide(color: Colors.grey[100]!, width: 1),
+        ),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Row(
+            children: [
+              CircleAvatar(
+                radius: 18,
+                backgroundColor: avatarColor,
+                child: Text(
+                  firstLetter,
+                  style: TextStyle(
+                    color: avatarTextColor,
+                    fontWeight: FontWeight.bold,
+                    fontSize: 14,
+                  ),
+                ),
+              ),
+              const SizedBox(width: 12),
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      review.tenKhachHang,
+                      style: const TextStyle(
+                        fontSize: 13,
+                        fontWeight: FontWeight.w600,
+                        color: Colors.black87,
+                      ),
+                    ),
+                    const SizedBox(height: 2),
+                    Row(
+                      children: [
+                        RatingBarIndicator(
+                          rating: review.diem.toDouble(),
+                          itemBuilder: (context, index) => const Icon(
+                            Icons.star_rounded,
+                            color: Colors.amber,
+                          ),
+                          itemCount: 5,
+                          itemSize: 14.0,
+                        ),
+                        const SizedBox(width: 8),
+                        Text(
+                          formattedTime,
+                          style: TextStyle(
+                            fontSize: 11,
+                            color: Colors.grey[500],
+                          ),
+                        ),
+                      ],
+                    ),
+                  ],
+                ),
+              ),
+            ],
+          ),
+          if (review.nhanXet.isNotEmpty) ...[
+            const SizedBox(height: 8),
+            Padding(
+              padding: const EdgeInsets.only(left: 48),
+              child: Text(
+                review.nhanXet,
+                style: TextStyle(
+                  fontSize: 13.5,
+                  color: Colors.grey[800],
+                  height: 1.5,
+                ),
+              ),
+            ),
+          ],
+        ],
+      ),
+    );
+  }
+
+  void _hienThiFormDanhGia() {
+    if (widget.user == null) {
+      showDialog(
+        context: context,
+        builder: (ctx) => AlertDialog(
+          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+          title: Row(
+            children: [
+              Icon(Icons.lock_outline, color: primaryBlue),
+              const SizedBox(width: 8),
+              const Text('Yêu cầu đăng nhập'),
+            ],
+          ),
+          content: const Text(
+            'Chỉ khách hàng đã đăng nhập mới được phép đánh giá sách. Bạn có muốn đăng nhập ngay?',
+            style: TextStyle(height: 1.4),
+          ),
+          actions: [
+            TextButton(
+              onPressed: () => Navigator.pop(ctx),
+              child: const Text('Hủy', style: TextStyle(color: Colors.grey)),
+            ),
+            ElevatedButton(
+              onPressed: () {
+                Navigator.pop(ctx);
+                Navigator.push(
+                  context,
+                  MaterialPageRoute(builder: (_) => const LoginScreen()),
+                );
+              },
+              style: ElevatedButton.styleFrom(
+                backgroundColor: primaryBlue,
+                shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
+              ),
+              child: const Text('Đăng nhập', style: TextStyle(color: Colors.white)),
+            ),
+          ],
+        ),
+      );
+      return;
+    }
+
+    double diemSo = _myExistingReview?.diem.toDouble() ?? 5.0;
+    final textController = TextEditingController(text: _myExistingReview?.nhanXet ?? '');
+    bool isSaving = false;
+
+    showModalBottomSheet(
+      context: context,
+      isScrollControlled: true,
+      backgroundColor: Colors.transparent,
+      builder: (ctx) {
+        return StatefulBuilder(
+          builder: (context, setSheetState) {
+            return Container(
+              padding: EdgeInsets.only(
+                top: 20,
+                left: 20,
+                right: 20,
+                bottom: MediaQuery.of(context).viewInsets.bottom + 24,
+              ),
+              decoration: BoxDecoration(
+                color: backgroundWhite,
+                borderRadius: const BorderRadius.vertical(top: Radius.circular(24)),
+              ),
+              child: SingleChildScrollView(
+                child: Column(
+                  mainAxisSize: MainAxisSize.min,
+                  crossAxisAlignment: CrossAxisAlignment.stretch,
+                  children: [
+                    Center(
+                      child: Container(
+                        width: 40,
+                        height: 4,
+                        decoration: BoxDecoration(
+                          color: Colors.grey[300],
+                          borderRadius: BorderRadius.circular(2),
+                        ),
+                      ),
+                    ),
+                    const SizedBox(height: 20),
+                    Text(
+                      _myExistingReview != null ? 'Chỉnh sửa đánh giá' : 'Viết đánh giá sách',
+                      style: const TextStyle(
+                        fontSize: 20,
+                        fontWeight: FontWeight.bold,
+                        color: Colors.black87,
+                      ),
+                      textAlign: TextAlign.center,
+                    ),
+                    const SizedBox(height: 8),
+                    Text(
+                      widget.sach.tenSach,
+                      style: TextStyle(
+                        fontSize: 14,
+                        color: Colors.grey[600],
+                      ),
+                      textAlign: TextAlign.center,
+                      maxLines: 1,
+                      overflow: TextOverflow.ellipsis,
+                    ),
+                    const SizedBox(height: 24),
+                    Center(
+                      child: RatingBar.builder(
+                        initialRating: diemSo,
+                        minRating: 1,
+                        direction: Axis.horizontal,
+                        allowHalfRating: false,
+                        itemCount: 5,
+                        itemPadding: const EdgeInsets.symmetric(horizontal: 4.0),
+                        itemBuilder: (context, _) => const Icon(
+                          Icons.star_rounded,
+                          color: Colors.amber,
+                        ),
+                        onRatingUpdate: (rating) {
+                          setSheetState(() {
+                            diemSo = rating;
+                          });
+                        },
+                      ),
+                    ),
+                    const SizedBox(height: 12),
+                    Center(
+                      child: Text(
+                        diemSo == 5
+                            ? 'Cực kỳ hài lòng'
+                            : diemSo == 4
+                                ? 'Rất hài lòng'
+                                : diemSo == 3
+                                    ? 'Hài lòng'
+                                    : diemSo == 2
+                                        ? 'Chưa hài lòng'
+                                        : 'Rất không hài lòng',
+                        style: TextStyle(
+                          color: Colors.amber[800],
+                          fontWeight: FontWeight.w600,
+                          fontSize: 15,
+                        ),
+                      ),
+                    ),
+                    const SizedBox(height: 24),
+                    TextField(
+                      controller: textController,
+                      maxLines: 4,
+                      maxLength: 500,
+                      decoration: InputDecoration(
+                        hintText: 'Hãy chia sẻ cảm nhận của bạn về cuốn sách này nhé...',
+                        hintStyle: TextStyle(color: Colors.grey[400], fontSize: 14),
+                        border: OutlineInputBorder(
+                          borderRadius: BorderRadius.circular(12),
+                          borderSide: BorderSide(color: Colors.grey[300]!),
+                        ),
+                        focusedBorder: OutlineInputBorder(
+                          borderRadius: BorderRadius.circular(12),
+                          borderSide: BorderSide(color: primaryBlue, width: 1.5),
+                        ),
+                        filled: true,
+                        fillColor: Colors.grey[50],
+                      ),
+                    ),
+                    const SizedBox(height: 16),
+                    ElevatedButton(
+                      onPressed: isSaving
+                          ? null
+                          : () async {
+                              final comment = textController.text.trim();
+                              if (comment.isEmpty) {
+                                ScaffoldMessenger.of(context).showSnackBar(
+                                  const SnackBar(
+                                    content: Text('Vui lòng điền nội dung nhận xét!'),
+                                    backgroundColor: Colors.red,
+                                  ),
+                                );
+                                return;
+                              }
+
+                              setSheetState(() {
+                                isSaving = true;
+                              });
+
+                              final result = await _apiService.saveReview(
+                                maSach: widget.sach.maSach,
+                                maKh: widget.user!.realId,
+                                diem: diemSo.toInt(),
+                                nhanXet: comment,
+                              );
+
+                              if (result['success'] == true) {
+                                Navigator.pop(ctx);
+                                _loadReviews();
+                                ScaffoldMessenger.of(context).showSnackBar(
+                                  SnackBar(
+                                    content: Text(result['message'] ?? 'Gửi đánh giá thành công!'),
+                                    backgroundColor: Colors.green,
+                                    behavior: SnackBarBehavior.floating,
+                                  ),
+                                );
+                              } else {
+                                setSheetState(() {
+                                  isSaving = false;
+                                });
+                                ScaffoldMessenger.of(context).showSnackBar(
+                                  SnackBar(
+                                    content: Text(result['message'] ?? 'Gửi đánh giá thất bại!'),
+                                    backgroundColor: Colors.red,
+                                  ),
+                                );
+                              }
+                            },
+                      style: ElevatedButton.styleFrom(
+                        backgroundColor: primaryBlue,
+                        foregroundColor: Colors.white,
+                        padding: const EdgeInsets.symmetric(vertical: 14),
+                        shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(12),
+                        ),
+                        elevation: 0,
+                      ),
+                      child: isSaving
+                          ? const SizedBox(
+                              height: 20,
+                              width: 20,
+                              child: CircularProgressIndicator(
+                                strokeWidth: 2,
+                                valueColor: AlwaysStoppedAnimation(Colors.white),
+                              ),
+                            )
+                          : Text(
+                              _myExistingReview != null ? 'Cập nhật đánh giá' : 'Gửi đánh giá',
+                              style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 16),
+                            ),
+                    ),
+                  ],
+                ),
+              ),
+            );
+          },
+        );
+      },
+    );
+  }
+
 
   // ================ BOTTOM BAR ================
   Widget _buildBottomBar() {

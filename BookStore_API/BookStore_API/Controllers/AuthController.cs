@@ -19,11 +19,63 @@ namespace BookStoreAPI.Controllers
         [HttpPost("Register")]
         public async Task<IActionResult> Register([FromBody] RegisterRequest request)
         {
-            if (await _context.Taikhoans.AnyAsync(t => t.Tendangnhap == request.TenDangNhap))
-                return BadRequest(new { message = "Tên đăng nhập đã tồn tại trên hệ thống!" });
+            // 1. Kiểm tra không được để trống các trường bắt buộc
+            if (string.IsNullOrWhiteSpace(request.TenDangNhap) ||
+                string.IsNullOrWhiteSpace(request.MatKhau) ||
+                string.IsNullOrWhiteSpace(request.Email) ||
+                string.IsNullOrWhiteSpace(request.HoVaTen) ||
+                string.IsNullOrWhiteSpace(request.Sdt) ||
+                string.IsNullOrWhiteSpace(request.DiaChiMacDinh) ||
+                string.IsNullOrWhiteSpace(request.GioiTinh))
+            {
+                return BadRequest(new { message = "Vui lòng điền đầy đủ các thông tin bắt buộc!" });
+            }
 
-            if (await _context.Khachhangs.AnyAsync(k => k.Email == request.Email))
-                return BadRequest(new { message = "Email này đã được đăng ký!" });
+            // 2. Validate email đúng định dạng
+            try
+            {
+                var addr = new System.Net.Mail.MailAddress(request.Email);
+                if (addr.Address != request.Email || !request.Email.Contains("."))
+                {
+                    return BadRequest(new { message = "Email không đúng định dạng" });
+                }
+            }
+            catch
+            {
+                return BadRequest(new { message = "Email không đúng định dạng" });
+            }
+
+            // 3. Validate số điện thoại (chỉ cho nhập số, không ký tự đặc biệt, độ dài hợp lệ từ 9-11 số)
+            var cleanedPhone = request.Sdt.Trim();
+            if (!System.Text.RegularExpressions.Regex.IsMatch(cleanedPhone, @"^\d{9,11}$"))
+            {
+                return BadRequest(new { message = "Số điện thoại không hợp lệ (chỉ chứa số, dài từ 9 đến 11 ký tự)!" });
+            }
+
+            // 4. Validate mật khẩu tối thiểu 6 ký tự
+            if (request.MatKhau.Length < 6)
+            {
+                return BadRequest(new { message = "Mật khẩu phải có độ dài tối thiểu 6 ký tự!" });
+            }
+
+            // 5. Validate ngày sinh không trong tương lai
+            if (request.NgaySinh.Date > DateTime.Today)
+            {
+                return BadRequest(new { message = "Ngày sinh không được vượt quá ngày hiện tại!" });
+            }
+
+            // 6. Kiểm tra trùng tên đăng nhập
+            if (await _context.Taikhoans.AnyAsync(t => t.Tendangnhap == request.TenDangNhap.Trim()))
+            {
+                return BadRequest(new { message = "Tên đăng nhập đã tồn tại" });
+            }
+
+            // 7. Kiểm tra trùng email
+            if (await _context.Taikhoans.AnyAsync(t => t.Email == request.Email.Trim()) ||
+                await _context.Khachhangs.AnyAsync(k => k.Email == request.Email.Trim()))
+            {
+                return BadRequest(new { message = "Email đã được sử dụng" });
+            }
 
             using var transaction = await _context.Database.BeginTransactionAsync();
             try
@@ -31,9 +83,9 @@ namespace BookStoreAPI.Controllers
                 // Tạo tài khoản hệ thống
                 var taiKhoan = new Taikhoan
                 {
-                    Tendangnhap = request.TenDangNhap,
-                    Matkhau = request.MatKhau, // Nên hash mật khẩu nếu làm dự án thực tế
-                    Email = request.Email,
+                    Tendangnhap = request.TenDangNhap.Trim(),
+                    Matkhau = request.MatKhau, // Giữ plain-text password theo yêu cầu
+                    Email = request.Email.Trim(),
                     Maquyen = 4, // 4: Khách hàng
                     Trangthai = "Hoạt động"
                 };
@@ -45,17 +97,19 @@ namespace BookStoreAPI.Controllers
                 var khachHang = new Khachhang
                 {
                     Mataikhoan = taiKhoan.Mataikhoan,
-                    Hovaten = request.HoVaTen,
-                    Sdt = request.Sdt,
-                    Email = request.Email,
-                    Diachimacdinh = request.DiaChiMacDinh
+                    Hovaten = request.HoVaTen.Trim(),
+                    Gioitinh = request.GioiTinh.Trim(),
+                    Ngaysinh = DateOnly.FromDateTime(request.NgaySinh),
+                    Sdt = cleanedPhone,
+                    Email = request.Email.Trim(),
+                    Diachimacdinh = request.DiaChiMacDinh.Trim()
                 };
 
                 _context.Khachhangs.Add(khachHang);
                 await _context.SaveChangesAsync();
 
                 await transaction.CommitAsync();
-                return Ok(new { message = "Đăng ký tài khoản thành công!" });
+                return Ok(new { message = "Đăng ký tài khoản thành công" });
             }
             catch (Exception ex)
             {
@@ -168,8 +222,10 @@ namespace BookStoreAPI.Controllers
         public string MatKhau { get; set; } = null!;
         public string Email { get; set; } = null!;
         public string HoVaTen { get; set; } = null!;
-        public string? Sdt { get; set; }
-        public string? DiaChiMacDinh { get; set; }
+        public string Sdt { get; set; } = null!;
+        public string DiaChiMacDinh { get; set; } = null!;
+        public string GioiTinh { get; set; } = null!;
+        public DateTime NgaySinh { get; set; }
     }
 
     public class LoginRequest
