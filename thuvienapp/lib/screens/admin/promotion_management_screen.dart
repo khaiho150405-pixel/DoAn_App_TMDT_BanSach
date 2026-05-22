@@ -99,13 +99,13 @@ class _PromotionManagementScreenState extends State<PromotionManagementScreen> {
                           padding: const EdgeInsets.symmetric(vertical: 40),
                           child: Column(
                             children: [
-                              Icon(Icons.local_offer_outlined,
-                                  size: 48, color: Colors.grey[400]),
+                              const Icon(Icons.local_offer_outlined,
+                                  size: 48, color: Color(0xFF9CA3AF)),
                               const SizedBox(height: 12),
                               Text(
                                 'Không có khuyến mãi "${provider.filterStatus}"',
-                                style: TextStyle(
-                                  color: Colors.grey[600],
+                                style: const TextStyle(
+                                  color: Color(0xFF6B7280),
                                   fontSize: 14,
                                 ),
                               ),
@@ -137,6 +137,8 @@ class _PromotionManagementScreenState extends State<PromotionManagementScreen> {
     const statuses = ['Tất cả', 'Đang diễn ra', 'Sắp diễn ra', 'Đã kết thúc'];
 
     return Card(
+      color: Colors.white,
+      surfaceTintColor: Colors.white,
       elevation: 1,
       shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
       child: Padding(
@@ -153,11 +155,11 @@ class _PromotionManagementScreenState extends State<PromotionManagementScreen> {
                   selected: isSelected,
                   selectedColor: const Color(0xFF2563EB),
                   labelStyle: TextStyle(
-                    color: isSelected ? Colors.white : Colors.grey[700],
+                    color: isSelected ? Colors.white : const Color(0xFF374151),
                     fontWeight:
                         isSelected ? FontWeight.bold : FontWeight.normal,
                   ),
-                  backgroundColor: Colors.grey[100],
+                  backgroundColor: const Color(0xFFF3F4F6),
                   side: BorderSide.none,
                   onSelected: (_) {
                     provider.setFilter(status);
@@ -183,11 +185,11 @@ class _PromotionCard extends StatelessWidget {
       case 'Đang diễn ra':
         return const Color(0xFF10B981);
       case 'Sắp diễn ra':
-        return const Color(0xFF0EA5E9);
+        return const Color(0xFFF59E0B);
       case 'Đã kết thúc':
-        return Colors.grey;
+        return const Color(0xFF6B7280);
       default:
-        return Colors.grey;
+        return const Color(0xFF2563EB);
     }
   }
 
@@ -210,6 +212,8 @@ class _PromotionCard extends StatelessWidget {
     final statusColor = _statusColor(promotion.trangThai);
 
     return Card(
+      color: Colors.white,
+      surfaceTintColor: Colors.white,
       margin: const EdgeInsets.only(bottom: 12),
       elevation: 1,
       shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
@@ -262,7 +266,7 @@ class _PromotionCard extends StatelessWidget {
                           child: Text(
                             promotion.moTa,
                             style: const TextStyle(
-                                color: Colors.grey, fontSize: 12),
+                                color: Color(0xFF6B7280), fontSize: 12),
                             maxLines: 1,
                             overflow: TextOverflow.ellipsis,
                           ),
@@ -275,7 +279,7 @@ class _PromotionCard extends StatelessWidget {
                   padding:
                       const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
                   decoration: BoxDecoration(
-                    color: statusColor.withOpacity(0.1),
+                    color: statusColor.withValues(alpha: 0.1),
                     borderRadius: BorderRadius.circular(20),
                   ),
                   child: Row(
@@ -300,26 +304,28 @@ class _PromotionCard extends StatelessWidget {
 
             const SizedBox(height: 12),
             // Divider
-            Divider(color: Colors.grey[200], height: 1),
+            const Divider(color: Color(0xFFE5E7EB), height: 1),
             const SizedBox(height: 12),
 
             // Footer: thời gian + số sách
             Row(
               children: [
                 const Icon(Icons.calendar_today_outlined,
-                    size: 14, color: Colors.grey),
+                    size: 14, color: Color(0xFF6B7280)),
                 const SizedBox(width: 6),
                 Text(
                   '${dateFormat.format(promotion.ngayBatDau)} - ${dateFormat.format(promotion.ngayKetThuc)}',
-                  style: const TextStyle(color: Colors.grey, fontSize: 13),
+                  style:
+                      const TextStyle(color: Color(0xFF6B7280), fontSize: 13),
                 ),
                 const Spacer(),
                 const Icon(Icons.menu_book_outlined,
-                    size: 14, color: Colors.grey),
+                    size: 14, color: Color(0xFF6B7280)),
                 const SizedBox(width: 4),
                 Text(
                   '${promotion.soSachApDung} sách',
-                  style: const TextStyle(color: Colors.grey, fontSize: 13),
+                  style:
+                      const TextStyle(color: Color(0xFF6B7280), fontSize: 13),
                 ),
               ],
             ),

@@ -1,5 +1,9 @@
 import 'package:flutter/material.dart';
+import 'package:provider/provider.dart';
+
 import '../../models/user.dart';
+import '../../providers/user_provider.dart';
+import '../admin/user_management_screen.dart';
 import '../login_screen.dart';
 import 'home_screen.dart';
 import 'my_orders_screen.dart';
@@ -41,7 +45,8 @@ class TabCaNhan extends StatelessWidget {
         onTap: () {
           Navigator.push(
             context,
-            MaterialPageRoute(builder: (_) => ChangePasswordScreen(user: user!)),
+            MaterialPageRoute(
+                builder: (_) => ChangePasswordScreen(user: user!)),
           );
         },
       ),
@@ -66,7 +71,8 @@ class TabCaNhan extends StatelessWidget {
           if (user == null) {
             ScaffoldMessenger.of(context).showSnackBar(
               const SnackBar(
-                content: Text('Vui lòng đăng nhập để sử dụng tính năng hỗ trợ!'),
+                content:
+                    Text('Vui lòng đăng nhập để sử dụng tính năng hỗ trợ!'),
                 behavior: SnackBarBehavior.floating,
               ),
             );
@@ -88,8 +94,11 @@ class TabCaNhan extends StatelessWidget {
         title: 'Cài đặt',
         subtitle: 'Tùy chỉnh cấu hình hệ thống',
         onTap: () {
-          ScaffoldMessenger.of(context).showSnackBar(
-            const SnackBar(content: Text('Tính năng đang phát triển')),
+          Navigator.push(
+            context,
+            MaterialPageRoute(
+              builder: (_) => UserManagementScreen(currentUser: user!),
+            ),
           );
         },
       ),
@@ -126,7 +135,8 @@ class TabCaNhan extends StatelessWidget {
                     icon: const Icon(Icons.logout),
                     label: const Text(
                       'Đăng xuất',
-                      style: TextStyle(fontWeight: FontWeight.bold, fontSize: 16),
+                      style:
+                          TextStyle(fontWeight: FontWeight.bold, fontSize: 16),
                     ),
                     style: OutlinedButton.styleFrom(
                       foregroundColor: Colors.red,
@@ -190,22 +200,26 @@ class TabCaNhan extends StatelessWidget {
                   const SizedBox(height: 4),
                   Row(
                     children: [
-                      const Icon(Icons.person_outline, size: 14, color: Colors.grey),
+                      const Icon(Icons.person_outline,
+                          size: 14, color: Colors.grey),
                       const SizedBox(width: 4),
                       Text(
                         user.tenDangNhap,
-                        style: const TextStyle(color: Colors.grey, fontSize: 13),
+                        style:
+                            const TextStyle(color: Colors.grey, fontSize: 13),
                       ),
                     ],
                   ),
                   const SizedBox(height: 2),
                   Row(
                     children: [
-                      const Icon(Icons.work_outline, size: 14, color: Colors.grey),
+                      const Icon(Icons.work_outline,
+                          size: 14, color: Colors.grey),
                       const SizedBox(width: 4),
                       Text(
                         user.roleName ?? 'Khách hàng',
-                        style: const TextStyle(color: Colors.grey, fontSize: 13),
+                        style:
+                            const TextStyle(color: Colors.grey, fontSize: 13),
                       ),
                     ],
                   ),
@@ -244,19 +258,21 @@ class TabCaNhan extends StatelessWidget {
           return Column(
             children: [
               ListTile(
-                contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 4),
+                contentPadding:
+                    const EdgeInsets.symmetric(horizontal: 16, vertical: 4),
                 leading: Container(
                   width: 40,
                   height: 40,
                   decoration: BoxDecoration(
-                    color: tile.iconColor.withOpacity(0.1),
+                    color: tile.iconColor.withValues(alpha: 0.1),
                     borderRadius: BorderRadius.circular(10),
                   ),
                   child: Icon(tile.icon, color: tile.iconColor, size: 22),
                 ),
                 title: Text(
                   tile.title,
-                  style: const TextStyle(fontWeight: FontWeight.w600, fontSize: 15),
+                  style: const TextStyle(
+                      fontWeight: FontWeight.w600, fontSize: 15),
                 ),
                 subtitle: Text(
                   tile.subtitle,
@@ -281,7 +297,8 @@ class TabCaNhan extends StatelessWidget {
         shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
         title: const Text(
           'Xác nhận đăng xuất',
-          style: TextStyle(fontWeight: FontWeight.bold, color: Color(0xFF1F2937)),
+          style:
+              TextStyle(fontWeight: FontWeight.bold, color: Color(0xFF1F2937)),
         ),
         content: const Text(
           'Bạn có chắc chắn muốn đăng xuất không?',
@@ -298,6 +315,7 @@ class TabCaNhan extends StatelessWidget {
           ElevatedButton(
             onPressed: () {
               Navigator.pop(ctx);
+              context.read<UserProvider>().logout();
               Navigator.pushAndRemoveUntil(
                 context,
                 MaterialPageRoute(builder: (_) => const LoginScreen()),

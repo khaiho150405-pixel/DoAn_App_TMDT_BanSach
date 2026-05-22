@@ -52,7 +52,7 @@ namespace BookStoreAPI.Controllers
             return Ok(result);
         }
 
-        [HttpGet("{id}")]
+        [HttpGet("{id:int}")]
         public async Task<IActionResult> GetById(int id)
         {
             var now = DateTime.Now;
@@ -213,6 +213,117 @@ namespace BookStoreAPI.Controllers
                 return StatusCode(500, new { message = $"Lỗi xử lý file hoặc DB: {ex.Message}" });
             }
         }
+
+        // =========================================================
+        // 4. LẤY DANH SÁCH THỂ LOẠI (có ID)
+        // =========================================================
+        [HttpGet("TheLoai")]
+        public async Task<IActionResult> GetTheLoai()
+        {
+            var result = await _context.Theloais
+                .Select(t => new { t.Matheloai, t.Tentheloai })
+                .OrderBy(t => t.Tentheloai)
+                .ToListAsync();
+            return Ok(result);
+        }
+
+        // =========================================================
+        // 5. LẤY DANH SÁCH TÁC GIẢ (có ID)
+        // =========================================================
+        [HttpGet("TacGiaList")]
+        public async Task<IActionResult> GetTacGiaList()
+        {
+            var result = await _context.Tacgia
+                .Select(t => new { t.Matg, t.Tentg })
+                .OrderBy(t => t.Tentg)
+                .ToListAsync();
+            return Ok(result);
+        }
+
+        // =========================================================
+        // 6. LẤY DANH SÁCH NHÀ XUẤT BẢN (có ID)
+        // =========================================================
+        [HttpGet("NhaXuatBanList")]
+        public async Task<IActionResult> GetNhaXuatBanList()
+        {
+            var result = await _context.Nhaxuatbans
+                .Select(n => new { n.Manxb, n.Tennxb })
+                .OrderBy(n => n.Tennxb)
+                .ToListAsync();
+            return Ok(result);
+        }
+
+        // =========================================================
+        // 7. CẬP NHẬT SÁCH
+        // =========================================================
+        [HttpPut("CapNhat/{id}")]
+        public async Task<IActionResult> CapNhatSach(int id, [FromBody] CapNhatSachRequest request)
+        {
+            try
+            {
+                var sach = await _context.Saches.FindAsync(id);
+                if (sach == null)
+                    return NotFound(new { message = "Không tìm thấy sách." });
+
+                sach.Tensach = request.TenSach ?? sach.Tensach;
+                sach.Giaban = request.GiaBan ?? sach.Giaban;
+                sach.Mota = request.MoTa ?? sach.Mota;
+                sach.Matheloai = request.MaTheLoai ?? sach.Matheloai;
+                sach.Matg = request.MaTg ?? sach.Matg;
+                sach.Manxb = request.MaNxb ?? sach.Manxb;
+
+                if (request.HinhAnh != null)
+                    sach.Hinhanh = request.HinhAnh;
+
+                await _context.SaveChangesAsync();
+
+                return Ok(new { message = "Cập nhật sách thành công!" });
+            }
+            catch (Exception ex)
+            {
+                return StatusCode(500, new { message = $"Lỗi cập nhật: {ex.Message}" });
+            }
+        }
+
+        // =========================================================
+        // 8. XÓA SÁCH (SOFT DELETE - đổi trạng thái)
+        // =========================================================
+        [HttpDelete("Xoa/{id}")]
+        public async Task<IActionResult> XoaSach(int id)
+        {
+            try
+            {
+                var sach = await _context.Saches
+                    .Include(s => s.Chitietdonhangs)
+                    .FirstOrDefaultAsync(s => s.Masach == id);
+
+                if (sach == null)
+                    return NotFound(new { message = "Không tìm thấy sách." });
+
+                // Soft delete: đổi trạng thái và set tồn kho = 0
+                sach.Trangthai = "Đã hết";
+                sach.Soluongton = 0;
+
+                await _context.SaveChangesAsync();
+
+                return Ok(new { message = "Đã ngừng kinh doanh sách này." });
+            }
+            catch (Exception ex)
+            {
+                return StatusCode(500, new { message = $"Lỗi xóa sách: {ex.Message}" });
+            }
+        }
+    }
+
+    public class CapNhatSachRequest
+    {
+        public string? TenSach { get; set; }
+        public decimal? GiaBan { get; set; }
+        public string? MoTa { get; set; }
+        public int? MaTheLoai { get; set; }
+        public int? MaTg { get; set; }
+        public int? MaNxb { get; set; }
+        public string? HinhAnh { get; set; }
     }
 
     public class FormSachRequest
