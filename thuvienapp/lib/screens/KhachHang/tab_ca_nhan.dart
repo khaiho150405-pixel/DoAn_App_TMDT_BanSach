@@ -10,6 +10,7 @@ import 'my_orders_screen.dart';
 import 'change_password_screen.dart';
 import 'my_reviews_screen.dart';
 import 'support_screen.dart';
+import '../chatbot/chatbot_screen.dart';
 
 /// Tab Cá Nhân - Hiển thị thông tin khách hàng hoặc yêu cầu đăng nhập
 class TabCaNhan extends StatelessWidget {
@@ -59,6 +60,18 @@ class TabCaNhan extends StatelessWidget {
           Navigator.push(
             context,
             MaterialPageRoute(builder: (_) => MyReviewsScreen(user: user!)),
+          );
+        },
+      ),
+      _SettingsTile(
+        icon: Icons.smart_toy_outlined,
+        iconColor: const Color(0xFF10B981),
+        title: 'Trợ lý ảo AI',
+        subtitle: 'Nhận gợi ý và tư vấn tìm sách thông minh',
+        onTap: () {
+          Navigator.push(
+            context,
+            MaterialPageRoute(builder: (_) => const ChatbotScreen()),
           );
         },
       ),

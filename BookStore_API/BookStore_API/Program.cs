@@ -14,6 +14,14 @@ builder.Services.AddDbContext<BookStoreContext>(options =>
 
 builder.Services.AddScoped<IOrderRepository, OrderRepository>();
 builder.Services.AddScoped<IOrderService, OrderService>();
+builder.Services.AddScoped<IRecommendationRepository, RecommendationRepository>();
+builder.Services.AddMemoryCache();
+builder.Services.AddHttpClient<IRecommendationService, RecommendationService>(client =>
+{
+    var baseUrl = builder.Configuration["AiRecommendation:BaseUrl"] ?? "http://localhost:8001";
+    client.BaseAddress = new Uri(baseUrl);
+    client.Timeout = TimeSpan.FromSeconds(8);
+});
 
 builder.Services.AddControllers();
 // Learn more about configuring OpenAPI at https://aka.ms/aspnet/openapi

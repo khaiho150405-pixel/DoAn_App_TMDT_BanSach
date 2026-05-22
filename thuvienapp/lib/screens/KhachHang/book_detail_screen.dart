@@ -9,10 +9,12 @@ import '../../models/user.dart';
 import '../../models/danh_gia.dart';
 import '../../providers/api_service.dart';
 import '../../providers/cart_provider.dart';
+import '../../providers/wishlist_provider.dart';
 import '../login_screen.dart';
 import 'checkout_screen.dart';
 import '../../theme/app_theme.dart';
 import 'gio_hang_screen.dart';
+import '../../widgets/recommendation_section.dart';
 
 class BookDetailScreen extends StatefulWidget {
   final Sach sach;
@@ -38,10 +40,12 @@ class _BookDetailScreenState extends State<BookDetailScreen> {
   bool _isReviewsLoading = true;
   DanhGia? _myExistingReview;
   final ApiService _apiService = ApiService();
+  late Future<List<Sach>> _futureSimilarBooks;
 
   @override
   void initState() {
     super.initState();
+    _futureSimilarBooks = _apiService.fetchSimilarBooks(widget.sach.maSach);
     _loadReviews();
   }
 
@@ -161,6 +165,39 @@ class _BookDetailScreenState extends State<BookDetailScreen> {
             style: TextStyle(fontWeight: FontWeight.bold, fontSize: 18)),
         centerTitle: true,
         actions: [
+          Consumer<WishlistProvider>(
+            builder: (ctx, wishlist, _) {
+              final isFav = wishlist.isFavorite(widget.sach.maSach);
+              return IconButton(
+                icon: Icon(
+                  isFav ? Icons.favorite : Icons.favorite_border,
+                  color: isFav ? Colors.red : primaryBlue,
+                ),
+                onPressed: () {
+                  wishlist.toggleFavorite(widget.sach);
+                  ScaffoldMessenger.of(context).clearSnackBars();
+                  ScaffoldMessenger.of(context).showSnackBar(
+                    SnackBar(
+                      content: Text(
+                        isFav
+                            ? 'Đã xóa khỏi danh sách yêu thích'
+                            : 'Đã thêm vào danh sách yêu thích',
+                        style: const TextStyle(fontWeight: FontWeight.w500),
+                      ),
+                      backgroundColor: isFav ? Colors.black87 : primaryBlue,
+                      behavior: SnackBarBehavior.floating,
+                      duration: const Duration(seconds: 2),
+                      action: SnackBarAction(
+                        label: 'Đóng',
+                        textColor: Colors.white,
+                        onPressed: () {},
+                      ),
+                    ),
+                  );
+                },
+              );
+            },
+          ),
           Consumer<CartProvider>(
               builder: (ctx, cart, _) =>
                   Stack(alignment: Alignment.center, children: [
@@ -210,6 +247,19 @@ class _BookDetailScreenState extends State<BookDetailScreen> {
           const SizedBox(height: 8),
           // === MÔ TẢ ===
           _buildDescriptionSection(s),
+          const SizedBox(height: 8),
+          RecommendationSection(
+            title: 'Sách tương tự',
+            icon: Icons.hub_outlined,
+            future: _futureSimilarBooks,
+            user: widget.user,
+            onRetry: () {
+              setState(() {
+                _futureSimilarBooks =
+                    _apiService.fetchSimilarBooks(widget.sach.maSach);
+              });
+            },
+          ),
           const SizedBox(height: 8),
           // === ĐÁNH GIÁ ===
           _buildRatingSection(rating, ratingCount),

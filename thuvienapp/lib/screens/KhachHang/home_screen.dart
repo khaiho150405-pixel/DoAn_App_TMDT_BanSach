@@ -10,8 +10,10 @@ import '../../providers/user_provider.dart';
 
 // Import các màn hình
 import '../login_screen.dart';
+import '../chatbot/chatbot_screen.dart';
 import 'tab_trang_chu.dart';
 import 'tab_danh_muc.dart';
+import 'tab_yeu_thich.dart';
 import 'tab_ca_nhan.dart';
 import 'gio_hang_screen.dart';
 import 'tim_kiem_screen.dart';
@@ -89,7 +91,13 @@ class _HomeScreenState extends State<HomeScreen> {
       // TAB 1: Danh Mục / Sách (Công khai)
       TabDanhMuc(user: currentUser),
 
-      // TAB 2: Cá Nhân (Đã xử lý guest bên trong TabCaNhan)
+      // TAB 2: Yêu Thích
+      TabYeuThich(
+        user: currentUser,
+        onGoToHome: () => _onItemTapped(0),
+      ),
+
+      // TAB 3: Cá Nhân (Đã xử lý guest bên trong TabCaNhan)
       TabCaNhan(user: currentUser),
     ];
 
@@ -103,7 +111,7 @@ class _HomeScreenState extends State<HomeScreen> {
             // --- AVATAR KHÁCH HÀNG ---
             GestureDetector(
               onTap: () {
-                _onItemTapped(2); // Chuyển tab sang Tab Cá Nhân
+                _onItemTapped(3); // Chuyển tab sang Tab Cá Nhân
               },
               child: Container(
                 width: 40,
@@ -267,6 +275,10 @@ class _HomeScreenState extends State<HomeScreen> {
           BottomNavigationBarItem(
               icon: Icon(Icons.menu_book), label: 'Danh mục'),
           BottomNavigationBarItem(
+              icon: Icon(Icons.favorite_outline),
+              activeIcon: Icon(Icons.favorite),
+              label: 'Yêu thích'),
+          BottomNavigationBarItem(
               icon: Icon(Icons.person_outline), label: 'Cá nhân'),
         ],
         currentIndex: _selectedIndex,
@@ -274,6 +286,43 @@ class _HomeScreenState extends State<HomeScreen> {
         unselectedItemColor: Colors.grey,
         onTap: _onItemTapped,
         type: BottomNavigationBarType.fixed,
+      ),
+      floatingActionButton: Container(
+        decoration: BoxDecoration(
+          gradient: const LinearGradient(
+            colors: [AppColors.primaryBlue, Color(0xFF3B82F6)],
+            begin: Alignment.topLeft,
+            end: Alignment.bottomRight,
+          ),
+          borderRadius: BorderRadius.circular(30),
+          boxShadow: [
+            BoxShadow(
+              color: AppColors.primaryBlue.withValues(alpha: 0.3),
+              blurRadius: 8,
+              offset: const Offset(0, 4),
+            ),
+          ],
+        ),
+        child: FloatingActionButton.extended(
+          onPressed: () {
+            Navigator.push(
+              context,
+              MaterialPageRoute(builder: (_) => const ChatbotScreen()),
+            );
+          },
+          backgroundColor: Colors.transparent,
+          elevation: 0,
+          highlightElevation: 0,
+          icon: const Icon(Icons.auto_awesome, color: Colors.white, size: 20),
+          label: const Text(
+            'Hỏi Trợ lý AI',
+            style: TextStyle(
+              color: Colors.white,
+              fontWeight: FontWeight.bold,
+              letterSpacing: 0.5,
+            ),
+          ),
+        ),
       ),
     );
   }

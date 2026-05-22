@@ -16,6 +16,8 @@ class Sach {
   final double? danhGiaSao;
   final int? soLuongDanhGia;
   final List<String>? danhSachAnh;
+  final double? recommendationScore;
+  final String? recommendationReason;
 
   Sach({
     required this.maSach,
@@ -35,6 +37,8 @@ class Sach {
     this.danhGiaSao,
     this.soLuongDanhGia,
     this.danhSachAnh,
+    this.recommendationScore,
+    this.recommendationReason,
   });
 
   factory Sach.fromJson(Map<String, dynamic> json) {
@@ -61,6 +65,8 @@ class Sach {
       danhGiaSao: _toDouble(json['danhGiaSao']),
       soLuongDanhGia: json['soLuongDanhGia'],
       danhSachAnh: images,
+      recommendationScore: _toDouble(json['recommendationScore']),
+      recommendationReason: json['recommendationReason'],
     );
   }
 
@@ -78,6 +84,30 @@ class Sach {
       result.add('default_book.jpg');
     }
     return result;
+  }
+
+  Map<String, dynamic> toJson() {
+    return {
+      'maSach': maSach,
+      'tenSach': tenSach,
+      'theLoai': theLoai,
+      'hinhAnh': hinhAnh,
+      'tenTacGia': tenTacGia,
+      'nhaXuatBan': nhaXuatBan,
+      'giaGoc': giaGoc,
+      'giaBanThucTe': giaBanThucTe,
+      'phanTramGiam': phanTramGiam,
+      'tenSuKienKhuyenMai': tenSuKienKhuyenMai,
+      'moTa': moTa,
+      'nhaCungCap': nhaCungCap,
+      'loaiBia': loaiBia,
+      'soLuongTonKho': soLuongTonKho,
+      'danhGiaSao': danhGiaSao,
+      'soLuongDanhGia': soLuongDanhGia,
+      'danhSachAnh': danhSachAnh,
+      'recommendationScore': recommendationScore,
+      'recommendationReason': recommendationReason,
+    };
   }
 
   static double _toDouble(dynamic value) {

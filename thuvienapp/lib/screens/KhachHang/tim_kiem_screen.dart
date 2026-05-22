@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import '../../models/sach.dart';
 import '../../providers/api_service.dart';
 import 'book_detail_screen.dart';
+import '../chatbot/chatbot_screen.dart';
 import '../../theme/app_theme.dart';
 
 /// Màn hình Tìm Kiếm Sách
@@ -114,6 +115,33 @@ class _TimKiemScreenState extends State<TimKiemScreen> {
                         style: TextStyle(fontSize: 15, color: Colors.grey[600]),
                         textAlign: TextAlign.center,
                       ),
+                      if (_searchQuery.isNotEmpty) ...[
+                        const SizedBox(height: 20),
+                        ElevatedButton.icon(
+                          onPressed: () {
+                            Navigator.push(
+                              context,
+                              MaterialPageRoute(
+                                  builder: (_) => const ChatbotScreen()),
+                            );
+                          },
+                          icon: const Icon(Icons.smart_toy_outlined,
+                              color: Colors.white),
+                          label: const Text('Hỏi Trợ lý AI tìm giúp',
+                              style: TextStyle(
+                                  color: Colors.white,
+                                  fontWeight: FontWeight.bold)),
+                          style: ElevatedButton.styleFrom(
+                            backgroundColor: AppColors.primaryBlue,
+                            padding: const EdgeInsets.symmetric(
+                                horizontal: 24, vertical: 12),
+                            shape: RoundedRectangleBorder(
+                              borderRadius: BorderRadius.circular(20),
+                            ),
+                            elevation: 2,
+                          ),
+                        ),
+                      ],
                     ],
                   ),
                 )
