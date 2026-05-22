@@ -3,7 +3,7 @@ import 'package:provider/provider.dart';
 
 import '../../models/user.dart';
 import '../../providers/user_provider.dart';
-import '../admin/user_management_screen.dart';
+import '../../widgets/common_settings_section.dart';
 import '../login_screen.dart';
 import 'home_screen.dart';
 import 'my_orders_screen.dart';
@@ -88,20 +88,6 @@ class TabCaNhan extends StatelessWidget {
           );
         },
       ),
-      _SettingsTile(
-        icon: Icons.settings_outlined,
-        iconColor: const Color(0xFF6B7280),
-        title: 'Cài đặt',
-        subtitle: 'Tùy chỉnh cấu hình hệ thống',
-        onTap: () {
-          Navigator.push(
-            context,
-            MaterialPageRoute(
-              builder: (_) => UserManagementScreen(currentUser: user!),
-            ),
-          );
-        },
-      ),
     ];
 
     return Container(
@@ -125,6 +111,10 @@ class TabCaNhan extends StatelessWidget {
 
                 // --- Grouped settings menu card ---
                 _buildSettingsCard(settingsTiles),
+                const SizedBox(height: 16),
+
+                // --- Cài đặt chung ---
+                const CommonSettingsSection(),
                 const SizedBox(height: 24),
 
                 // --- Outlined Logout Button ---

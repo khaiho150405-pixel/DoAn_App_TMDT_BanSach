@@ -1,9 +1,8 @@
 using System;
-using System.Collections.Generic;
 
 namespace BookStore_API.Models;
 
-public partial class Tinnhanhotro
+public partial class Tinnhan
 {
     public int Matinnhan { get; set; }
 
@@ -16,10 +15,6 @@ public partial class Tinnhanhotro
     public int? Manv { get; set; }
 
     public string Noidung { get; set; } = null!;
-
-    public string? Hinhanh { get; set; }
-
-    public bool? Daxem { get; set; }
 
     public DateTime? Thoigian { get; set; }
 

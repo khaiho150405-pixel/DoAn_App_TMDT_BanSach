@@ -262,45 +262,61 @@ class _QuanLyDonHangScreenState extends State<QuanLyDonHangScreen>
               onPressed: () => _showOrderDetail(maDH),
             ),
             const Spacer(),
-            if (currentStatus == 'Chờ xác nhận')
-              ElevatedButton.icon(
-                icon: const Icon(Icons.check_circle_outline, size: 16),
-                label: const Text('Xác nhận'),
-                style: ElevatedButton.styleFrom(
-                    backgroundColor: const Color(0xFF27AE60),
-                    foregroundColor: Colors.white,
-                    shape: RoundedRectangleBorder(
-                        borderRadius: BorderRadius.circular(10)),
-                    padding: const EdgeInsets.symmetric(horizontal: 12)),
-                onPressed: () => _changeStatus(maDH, 'Đang chuẩn bị hàng'),
+            if (currentStatus == 'Chờ xác nhận') ...[
+              _actionBtn(
+                icon: Icons.cancel_outlined,
+                label: 'Hủy đơn',
+                color: Colors.redAccent,
+                onPressed: () => _changeStatus(
+                    maDH, 'Đã hủy', tenNguoiNhan, tongTien),
               ),
+              const SizedBox(width: 8),
+              _actionBtn(
+                icon: Icons.check_circle_outline,
+                label: 'Xác nhận',
+                color: const Color(0xFF27AE60),
+                onPressed: () => _changeStatus(
+                    maDH, 'Đang chuẩn bị hàng', tenNguoiNhan, tongTien),
+              ),
+            ],
             if (currentStatus == 'Đang chuẩn bị hàng')
-              ElevatedButton.icon(
-                icon: const Icon(Icons.local_shipping_outlined, size: 16),
-                label: const Text('Giao hàng'),
-                style: ElevatedButton.styleFrom(
-                    backgroundColor: const Color(0xFF8E44AD),
-                    foregroundColor: Colors.white,
-                    shape: RoundedRectangleBorder(
-                        borderRadius: BorderRadius.circular(10)),
-                    padding: const EdgeInsets.symmetric(horizontal: 12)),
-                onPressed: () => _changeStatus(maDH, 'Đang giao'),
+              _actionBtn(
+                icon: Icons.local_shipping_outlined,
+                label: 'Giao hàng',
+                color: const Color(0xFF8E44AD),
+                onPressed: () => _changeStatus(
+                    maDH, 'Đang giao', tenNguoiNhan, tongTien),
               ),
             if (currentStatus == 'Đang giao')
-              ElevatedButton.icon(
-                icon: const Icon(Icons.done_all_rounded, size: 16),
-                label: const Text('Hoàn thành'),
-                style: ElevatedButton.styleFrom(
-                    backgroundColor: const Color(0xFF27AE60),
-                    foregroundColor: Colors.white,
-                    shape: RoundedRectangleBorder(
-                        borderRadius: BorderRadius.circular(10)),
-                    padding: const EdgeInsets.symmetric(horizontal: 12)),
-                onPressed: () => _changeStatus(maDH, 'Hoàn thành'),
+              _actionBtn(
+                icon: Icons.done_all_rounded,
+                label: 'Hoàn thành',
+                color: const Color(0xFF27AE60),
+                onPressed: () => _changeStatus(
+                    maDH, 'Hoàn thành', tenNguoiNhan, tongTien),
               ),
           ]),
         ),
       ]),
+    );
+  }
+
+  Widget _actionBtn({
+    required IconData icon,
+    required String label,
+    required Color color,
+    required VoidCallback onPressed,
+  }) {
+    return ElevatedButton.icon(
+      icon: Icon(icon, size: 16),
+      label: Text(label),
+      style: ElevatedButton.styleFrom(
+        backgroundColor: color,
+        foregroundColor: Colors.white,
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
+        padding: const EdgeInsets.symmetric(horizontal: 12),
+      ),
+      onPressed: onPressed,
     );
   }
 
@@ -320,24 +336,82 @@ class _QuanLyDonHangScreenState extends State<QuanLyDonHangScreen>
     ]);
   }
 
-  Future<void> _changeStatus(int maDH, String newStatus) async {
+  Future<void> _changeStatus(
+      int maDH, String newStatus, String tenKH, double tongTien) async {
     final user = Provider.of<UserProvider>(context, listen: false).user;
+    final isCancel = newStatus == 'Đã hủy';
+    final statusColor = isCancel ? Colors.redAccent : const Color(0xFF2563EB);
+
     final confirm = await showDialog<bool>(
       context: context,
       builder: (ctx) => AlertDialog(
         shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
-        title: const Text('Xác nhận'),
-        content: Text('Chuyển đơn #$maDH sang "$newStatus"?'),
+        title: Row(children: [
+          Container(
+            width: 40,
+            height: 40,
+            decoration: BoxDecoration(
+              color: statusColor.withOpacity(0.1),
+              borderRadius: BorderRadius.circular(10),
+            ),
+            child: Icon(
+              isCancel ? Icons.cancel_outlined : Icons.swap_horiz_rounded,
+              color: statusColor,
+            ),
+          ),
+          const SizedBox(width: 12),
+          Text(isCancel ? 'Hủy đơn hàng' : 'Xác nhận chuyển trạng thái',
+              style:
+                  const TextStyle(fontSize: 16, fontWeight: FontWeight.bold)),
+        ]),
+        content: Column(
+          mainAxisSize: MainAxisSize.min,
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Container(
+              width: double.infinity,
+              padding: const EdgeInsets.all(12),
+              decoration: BoxDecoration(
+                color: Colors.grey.shade50,
+                borderRadius: BorderRadius.circular(10),
+              ),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text('Đơn #$maDH',
+                      style: const TextStyle(
+                          fontWeight: FontWeight.bold, fontSize: 15)),
+                  const SizedBox(height: 4),
+                  Text('Khách: $tenKH',
+                      style: TextStyle(
+                          fontSize: 13, color: Colors.grey.shade700)),
+                  Text(
+                      'Tổng tiền: ${currencyFormat.format(tongTien)}',
+                      style: TextStyle(
+                          fontSize: 13,
+                          fontWeight: FontWeight.w600,
+                          color: Colors.grey.shade700)),
+                ],
+              ),
+            ),
+            const SizedBox(height: 12),
+            Text(
+              isCancel
+                  ? 'Bạn có chắc muốn hủy đơn hàng này? Tồn kho sẽ được hoàn lại.'
+                  : 'Chuyển trạng thái sang "$newStatus"?',
+              style: const TextStyle(fontSize: 14),
+            ),
+          ],
+        ),
         actions: [
           TextButton(
               onPressed: () => Navigator.pop(ctx, false),
-              child: const Text('Hủy')),
+              child: const Text('Đóng')),
           ElevatedButton(
             style: ElevatedButton.styleFrom(
-                backgroundColor: const Color(0xFF2563EB),
-                foregroundColor: Colors.white),
+                backgroundColor: statusColor, foregroundColor: Colors.white),
             onPressed: () => Navigator.pop(ctx, true),
-            child: const Text('Xác nhận'),
+            child: Text(isCancel ? 'Hủy đơn' : 'Xác nhận'),
           ),
         ],
       ),
@@ -349,8 +423,7 @@ class _QuanLyDonHangScreenState extends State<QuanLyDonHangScreen>
     if (mounted) {
       ScaffoldMessenger.of(context).showSnackBar(SnackBar(
           content: Text(result['message'] ?? 'Đã cập nhật'),
-          backgroundColor: Colors.green));
-      // Reload cả 2 tab liên quan
+          backgroundColor: isCancel ? Colors.red : Colors.green));
       for (var s in _statuses) {
         _loadOrders(s);
       }

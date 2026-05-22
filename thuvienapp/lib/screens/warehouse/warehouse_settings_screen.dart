@@ -4,7 +4,10 @@ import 'package:provider/provider.dart';
 import '../../providers/api_service.dart';
 import '../../providers/user_provider.dart';
 import '../../widgets/admin/admin_app_bar_title.dart';
+import '../../widgets/common_settings_section.dart';
 import '../login_screen.dart';
+import 'author_management_screen.dart';
+import 'publisher_management_screen.dart';
 
 class WarehouseSettingsScreen extends StatefulWidget {
   const WarehouseSettingsScreen({super.key});
@@ -15,201 +18,6 @@ class WarehouseSettingsScreen extends StatefulWidget {
 }
 
 class _WarehouseSettingsScreenState extends State<WarehouseSettingsScreen> {
-  bool _isDarkMode = false;
-
-  // =========================================================
-  // ĐỔI MẬT KHẨU
-  // =========================================================
-  void _showChangePasswordDialog() {
-    final currentUser = context.read<UserProvider>().user;
-    if (currentUser == null) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Phiên đăng nhập đã hết hạn.')),
-      );
-      return;
-    }
-
-    final formKey = GlobalKey<FormState>();
-    String oldPw = '', newPw = '';
-    bool isSubmitting = false;
-
-    showDialog(
-      context: context,
-      builder: (ctx) {
-        return StatefulBuilder(
-          builder: (context, setDialogState) {
-            return Dialog(
-              shape: RoundedRectangleBorder(
-                  borderRadius: BorderRadius.circular(16)),
-              child: Padding(
-                padding: const EdgeInsets.all(24),
-                child: Form(
-                  key: formKey,
-                  child: Column(
-                    mainAxisSize: MainAxisSize.min,
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Row(
-                        children: [
-                          Container(
-                            width: 40,
-                            height: 40,
-                            decoration: BoxDecoration(
-                              color: const Color(0xFFEFF6FF),
-                              borderRadius: BorderRadius.circular(10),
-                            ),
-                            child: const Icon(Icons.lock_outline,
-                                color: Color(0xFF2563EB)),
-                          ),
-                          const SizedBox(width: 12),
-                          const Text(
-                            'Đổi mật khẩu',
-                            style: TextStyle(
-                                fontSize: 18, fontWeight: FontWeight.bold),
-                          ),
-                        ],
-                      ),
-                      const SizedBox(height: 20),
-                      TextFormField(
-                        decoration: InputDecoration(
-                          labelText: 'Mật khẩu hiện tại',
-                          border: OutlineInputBorder(
-                              borderRadius: BorderRadius.circular(10)),
-                          prefixIcon: const Icon(Icons.lock_outline),
-                        ),
-                        obscureText: true,
-                        validator: (v) =>
-                            v!.isEmpty ? 'Vui lòng nhập mật khẩu cũ' : null,
-                        onSaved: (v) => oldPw = v!,
-                      ),
-                      const SizedBox(height: 12),
-                      TextFormField(
-                        decoration: InputDecoration(
-                          labelText: 'Mật khẩu mới',
-                          border: OutlineInputBorder(
-                              borderRadius: BorderRadius.circular(10)),
-                          prefixIcon: const Icon(Icons.lock_reset),
-                        ),
-                        obscureText: true,
-                        validator: (v) {
-                          if (v == null || v.isEmpty) {
-                            return 'Vui lòng nhập mật khẩu mới';
-                          }
-                          if (v.length < 6) return 'Tối thiểu 6 ký tự';
-                          return null;
-                        },
-                        onChanged: (v) => newPw = v,
-                        onSaved: (v) => newPw = v!,
-                      ),
-                      const SizedBox(height: 12),
-                      TextFormField(
-                        decoration: InputDecoration(
-                          labelText: 'Xác nhận mật khẩu mới',
-                          border: OutlineInputBorder(
-                              borderRadius: BorderRadius.circular(10)),
-                          prefixIcon: const Icon(Icons.lock_reset),
-                        ),
-                        obscureText: true,
-                        validator: (v) {
-                          if (v != newPw) {
-                            return 'Mật khẩu xác nhận không khớp';
-                          }
-                          return null;
-                        },
-                      ),
-                      const SizedBox(height: 20),
-                      Row(
-                        children: [
-                          Expanded(
-                            child: OutlinedButton(
-                              onPressed: isSubmitting
-                                  ? null
-                                  : () => Navigator.pop(ctx),
-                              style: OutlinedButton.styleFrom(
-                                padding:
-                                    const EdgeInsets.symmetric(vertical: 12),
-                                shape: RoundedRectangleBorder(
-                                    borderRadius: BorderRadius.circular(10)),
-                              ),
-                              child: const Text('Hủy'),
-                            ),
-                          ),
-                          const SizedBox(width: 12),
-                          Expanded(
-                            child: ElevatedButton(
-                              onPressed: isSubmitting
-                                  ? null
-                                  : () async {
-                                      if (!formKey.currentState!.validate()) {
-                                        return;
-                                      }
-                                      formKey.currentState!.save();
-                                      setDialogState(
-                                          () => isSubmitting = true);
-
-                                      try {
-                                        await ApiService().changePassword(
-                                            currentUser.maTaiKhoan,
-                                            oldPw,
-                                            newPw);
-                                        if (ctx.mounted) {
-                                          Navigator.pop(ctx);
-                                          ScaffoldMessenger.of(context)
-                                              .showSnackBar(
-                                            const SnackBar(
-                                                content: Text(
-                                                    'Đổi mật khẩu thành công!')),
-                                          );
-                                        }
-                                      } catch (e) {
-                                        if (ctx.mounted) {
-                                          ScaffoldMessenger.of(context)
-                                              .showSnackBar(
-                                            SnackBar(
-                                                content:
-                                                    Text(e.toString()),
-                                                backgroundColor:
-                                                    const Color(
-                                                        0xFFEA580C)),
-                                          );
-                                        }
-                                      } finally {
-                                        if (ctx.mounted) {
-                                          setDialogState(
-                                              () => isSubmitting = false);
-                                        }
-                                      }
-                                    },
-                              style: ElevatedButton.styleFrom(
-                                backgroundColor: const Color(0xFF2563EB),
-                                foregroundColor: Colors.white,
-                                padding:
-                                    const EdgeInsets.symmetric(vertical: 12),
-                                shape: RoundedRectangleBorder(
-                                    borderRadius: BorderRadius.circular(10)),
-                              ),
-                              child: isSubmitting
-                                  ? const SizedBox(
-                                      width: 18,
-                                      height: 18,
-                                      child: CircularProgressIndicator(
-                                          color: Colors.white,
-                                          strokeWidth: 2))
-                                  : const Text('Xác nhận'),
-                            ),
-                          ),
-                        ],
-                      ),
-                    ],
-                  ),
-                ),
-              ),
-            );
-          },
-        );
-      },
-    );
-  }
 
   // =========================================================
   // ĐĂNG XUẤT
@@ -355,37 +163,13 @@ class _WarehouseSettingsScreenState extends State<WarehouseSettingsScreen> {
             ),
             const SizedBox(height: 20),
 
-            // Settings items
-            const Text(
-              'TÀI KHOẢN',
-              style: TextStyle(
-                fontSize: 12,
-                fontWeight: FontWeight.bold,
-                color: Color(0xFF9CA3AF),
-                letterSpacing: 1,
-              ),
-            ),
-            const SizedBox(height: 8),
-            _buildSettingsCard([
-              _SettingsTile(
-                icon: Icons.person_outline,
-                title: 'Thông tin cá nhân',
-                subtitle: user?.soDienThoai ?? 'Chưa cập nhật SĐT',
-                iconColor: const Color(0xFF2563EB),
-                onTap: () {},
-              ),
-              _SettingsTile(
-                icon: Icons.lock_outline,
-                title: 'Đổi mật khẩu',
-                subtitle: 'Cập nhật mật khẩu bảo mật',
-                iconColor: const Color(0xFFF59E0B),
-                onTap: _showChangePasswordDialog,
-              ),
-            ]),
+            // Settings section (dùng chung)
+            const CommonSettingsSection(),
             const SizedBox(height: 20),
 
+            // Management section
             const Text(
-              'ỨNG DỤNG',
+              'QUẢN LÝ DANH MỤC',
               style: TextStyle(
                 fontSize: 12,
                 fontWeight: FontWeight.bold,
@@ -396,21 +180,24 @@ class _WarehouseSettingsScreenState extends State<WarehouseSettingsScreen> {
             const SizedBox(height: 8),
             _buildSettingsCard([
               _SettingsTile(
-                icon: Icons.dark_mode_outlined,
-                title: 'Chế độ tối',
-                subtitle: 'Chuyển giao diện sáng/tối',
-                iconColor: const Color(0xFF6366F1),
-                trailing: Switch(
-                  value: _isDarkMode,
-                  activeColor: const Color(0xFF2563EB),
-                  onChanged: (v) => setState(() => _isDarkMode = v),
-                ),
+                icon: Icons.person_search_rounded,
+                title: 'Quản lý Tác giả',
+                subtitle: 'Thêm, sửa, xóa tác giả sách',
+                iconColor: const Color(0xFF8B5CF6),
+                onTap: () => Navigator.push(
+                    context,
+                    MaterialPageRoute(
+                        builder: (_) => const AuthorManagementScreen())),
               ),
               _SettingsTile(
-                icon: Icons.info_outline,
-                title: 'Phiên bản',
-                subtitle: 'E-BookStore v1.0.0',
-                iconColor: const Color(0xFF10B981),
+                icon: Icons.business_rounded,
+                title: 'Quản lý Nhà xuất bản',
+                subtitle: 'Thêm, sửa, xóa NXB',
+                iconColor: const Color(0xFF059669),
+                onTap: () => Navigator.push(
+                    context,
+                    MaterialPageRoute(
+                        builder: (_) => const PublisherManagementScreen())),
               ),
             ]),
             const SizedBox(height: 24),

@@ -3,6 +3,7 @@ import 'package:provider/provider.dart';
 
 import '../../providers/user_provider.dart';
 import '../../providers/api_service.dart';
+import '../../widgets/common_settings_section.dart';
 import '../login_screen.dart';
 import 'quan_ly_don_hang_screen.dart';
 import 'tim_kiem_sach_screen.dart';
@@ -480,6 +481,11 @@ class _CaNhanTab extends StatelessWidget {
                   MaterialPageRoute(
                       builder: (_) => const TaoTaiKhoanKhachScreen()));
             }),
+
+            const SizedBox(height: 20),
+
+            // === CÀI ĐẶT CHUNG ===
+            const CommonSettingsSection(),
 
             const SizedBox(height: 24),
 

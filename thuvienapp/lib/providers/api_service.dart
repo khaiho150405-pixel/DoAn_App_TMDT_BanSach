@@ -730,6 +730,126 @@ class ApiService {
     }
   }
 
+  // =========================================================
+  // QUẢN LÝ TÁC GIẢ (NV Kho)
+  // =========================================================
+
+  Future<List<Map<String, dynamic>>> fetchAuthorsManagement() async {
+    try {
+      final response = await http.get(Uri.parse('$baseUrl/TacGia'));
+      if (response.statusCode == 200) {
+        final List jsonResponse = json.decode(response.body);
+        return jsonResponse.cast<Map<String, dynamic>>();
+      }
+      return [];
+    } catch (e) {
+      debugPrint('fetchAuthorsManagement error: $e');
+      return [];
+    }
+  }
+
+  Future<Map<String, dynamic>> addAuthor(Map<String, dynamic> data) async {
+    try {
+      final response = await http.post(
+        Uri.parse('$baseUrl/TacGia'),
+        headers: {'Content-Type': 'application/json'},
+        body: json.encode(data),
+      );
+      final result = _tryDecodeMap(response.body);
+      return {'success': response.statusCode == 200, ...result};
+    } catch (e) {
+      debugPrint('addAuthor error: $e');
+      return {'success': false, 'message': 'Không thể kết nối server!'};
+    }
+  }
+
+  Future<Map<String, dynamic>> updateAuthor(
+      int id, Map<String, dynamic> data) async {
+    try {
+      final response = await http.put(
+        Uri.parse('$baseUrl/TacGia/$id'),
+        headers: {'Content-Type': 'application/json'},
+        body: json.encode(data),
+      );
+      final result = _tryDecodeMap(response.body);
+      return {'success': response.statusCode == 200, ...result};
+    } catch (e) {
+      debugPrint('updateAuthor error: $e');
+      return {'success': false, 'message': 'Không thể kết nối server!'};
+    }
+  }
+
+  Future<Map<String, dynamic>> deleteAuthor(int id) async {
+    try {
+      final response = await http.delete(Uri.parse('$baseUrl/TacGia/$id'));
+      final result = _tryDecodeMap(response.body);
+      return {'success': response.statusCode == 200, ...result};
+    } catch (e) {
+      debugPrint('deleteAuthor error: $e');
+      return {'success': false, 'message': 'Không thể kết nối server!'};
+    }
+  }
+
+  // =========================================================
+  // QUẢN LÝ NHÀ XUẤT BẢN (NV Kho)
+  // =========================================================
+
+  Future<List<Map<String, dynamic>>> fetchPublishersManagement() async {
+    try {
+      final response = await http.get(Uri.parse('$baseUrl/NhaXuatBan'));
+      if (response.statusCode == 200) {
+        final List jsonResponse = json.decode(response.body);
+        return jsonResponse.cast<Map<String, dynamic>>();
+      }
+      return [];
+    } catch (e) {
+      debugPrint('fetchPublishersManagement error: $e');
+      return [];
+    }
+  }
+
+  Future<Map<String, dynamic>> addPublisher(Map<String, dynamic> data) async {
+    try {
+      final response = await http.post(
+        Uri.parse('$baseUrl/NhaXuatBan'),
+        headers: {'Content-Type': 'application/json'},
+        body: json.encode(data),
+      );
+      final result = _tryDecodeMap(response.body);
+      return {'success': response.statusCode == 200, ...result};
+    } catch (e) {
+      debugPrint('addPublisher error: $e');
+      return {'success': false, 'message': 'Không thể kết nối server!'};
+    }
+  }
+
+  Future<Map<String, dynamic>> updatePublisher(
+      int id, Map<String, dynamic> data) async {
+    try {
+      final response = await http.put(
+        Uri.parse('$baseUrl/NhaXuatBan/$id'),
+        headers: {'Content-Type': 'application/json'},
+        body: json.encode(data),
+      );
+      final result = _tryDecodeMap(response.body);
+      return {'success': response.statusCode == 200, ...result};
+    } catch (e) {
+      debugPrint('updatePublisher error: $e');
+      return {'success': false, 'message': 'Không thể kết nối server!'};
+    }
+  }
+
+  Future<Map<String, dynamic>> deletePublisher(int id) async {
+    try {
+      final response = await http.delete(Uri.parse('$baseUrl/NhaXuatBan/$id'));
+      final result = _tryDecodeMap(response.body);
+      return {'success': response.statusCode == 200, ...result};
+    } catch (e) {
+      debugPrint('deletePublisher error: $e');
+      return {'success': false, 'message': 'Không thể kết nối server!'};
+    }
+  }
+
   Map<String, dynamic> _tryDecodeMap(String body) {
     if (body.isEmpty) return {};
     final decoded = json.decode(body);

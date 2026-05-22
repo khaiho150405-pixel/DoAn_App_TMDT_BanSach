@@ -3,6 +3,7 @@ import 'package:provider/provider.dart';
 import 'package:intl/intl.dart';
 import '../../providers/api_service.dart';
 import '../../providers/user_provider.dart';
+import 'sale_support_chat_screen.dart';
 
 class HoidapScreen extends StatefulWidget {
   const HoidapScreen({super.key});
@@ -153,7 +154,9 @@ class _HoidapScreenState extends State<HoidapScreen>
 
   Widget _questionCard(Map<String, dynamic> q, bool isPending) {
     final tenKH = q['tenKhachHang'] ?? 'Khách hàng';
+    final tieuDe = q['tieude'] ?? '';
     final cauHoi = q['cauhoi'] ?? '';
+    final loaiHoTro = q['loaiHoTro'] ?? '';
     final traLoi = q['traloi'];
     final trangThai = q['trangthai'] ?? 'Chờ trả lời';
     final thoiGianHoi = q['thoigianhoi'] != null
@@ -166,132 +169,188 @@ class _HoidapScreenState extends State<HoidapScreen>
         : '';
     final isAnswered = trangThai == 'Đã trả lời';
 
-    return Container(
-      margin: const EdgeInsets.only(bottom: 12),
-      decoration: BoxDecoration(
-        color: Colors.white,
-        borderRadius: BorderRadius.circular(16),
-        boxShadow: [
-          BoxShadow(
-              color: Colors.black.withOpacity(0.05),
-              blurRadius: 10,
-              offset: const Offset(0, 4))
-        ],
-        border: isPending
-            ? Border.all(
-                color: const Color(0xFFE8913A).withOpacity(0.3), width: 1)
-            : null,
-      ),
-      child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
-        // Header
-        Container(
-          padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
-          decoration: BoxDecoration(
-            color:
-                (isAnswered ? const Color(0xFF27AE60) : const Color(0xFFE8913A))
-                    .withOpacity(0.08),
-            borderRadius: const BorderRadius.only(
-                topLeft: Radius.circular(16), topRight: Radius.circular(16)),
-          ),
-          child: Row(children: [
-            CircleAvatar(
-              radius: 16,
-              backgroundColor: const Color(0xFF4A90D9).withOpacity(0.15),
-              child: Text(tenKH.isNotEmpty ? tenKH[0].toUpperCase() : '?',
-                  style: const TextStyle(
-                      fontWeight: FontWeight.bold,
-                      color: Color(0xFF4A90D9),
-                      fontSize: 14)),
-            ),
-            const SizedBox(width: 10),
-            Expanded(
-                child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                  Text(tenKH,
-                      style: const TextStyle(
-                          fontWeight: FontWeight.w600, fontSize: 13)),
-                  Text(thoiGianHoi,
-                      style:
-                          TextStyle(fontSize: 11, color: Colors.grey.shade500)),
-                ])),
-            Container(
-              padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
-              decoration: BoxDecoration(
-                color: (isAnswered
-                        ? const Color(0xFF27AE60)
-                        : const Color(0xFFE8913A))
-                    .withOpacity(0.15),
-                borderRadius: BorderRadius.circular(20),
-              ),
-              child: Text(trangThai,
-                  style: TextStyle(
-                      fontSize: 11,
-                      fontWeight: FontWeight.w600,
-                      color: isAnswered
-                          ? const Color(0xFF27AE60)
-                          : const Color(0xFFE8913A))),
-            ),
-          ]),
+    return GestureDetector(
+      onTap: () => _openChat(q),
+      child: Container(
+        margin: const EdgeInsets.only(bottom: 12),
+        decoration: BoxDecoration(
+          color: Colors.white,
+          borderRadius: BorderRadius.circular(16),
+          boxShadow: [
+            BoxShadow(
+                color: Colors.black.withOpacity(0.05),
+                blurRadius: 10,
+                offset: const Offset(0, 4))
+          ],
+          border: isPending
+              ? Border.all(
+                  color: const Color(0xFFE8913A).withOpacity(0.3), width: 1)
+              : null,
         ),
-        // Question
-        Padding(
-          padding: const EdgeInsets.all(16),
-          child:
-              Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
-            Row(crossAxisAlignment: CrossAxisAlignment.start, children: [
-              Icon(Icons.help_outline_rounded,
-                  size: 18, color: const Color(0xFFE8913A).withOpacity(0.7)),
-              const SizedBox(width: 8),
+        child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
+          // Header
+          Container(
+            padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
+            decoration: BoxDecoration(
+              color:
+                  (isAnswered ? const Color(0xFF27AE60) : const Color(0xFFE8913A))
+                      .withOpacity(0.08),
+              borderRadius: const BorderRadius.only(
+                  topLeft: Radius.circular(16), topRight: Radius.circular(16)),
+            ),
+            child: Row(children: [
+              CircleAvatar(
+                radius: 16,
+                backgroundColor: const Color(0xFF4A90D9).withOpacity(0.15),
+                child: Text(tenKH.isNotEmpty ? tenKH[0].toUpperCase() : '?',
+                    style: const TextStyle(
+                        fontWeight: FontWeight.bold,
+                        color: Color(0xFF4A90D9),
+                        fontSize: 14)),
+              ),
+              const SizedBox(width: 10),
               Expanded(
-                  child: Text(cauHoi,
-                      style: const TextStyle(fontSize: 14, height: 1.4))),
+                  child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                    Text(tenKH,
+                        style: const TextStyle(
+                            fontWeight: FontWeight.w600, fontSize: 13)),
+                    Text(thoiGianHoi,
+                        style:
+                            TextStyle(fontSize: 11, color: Colors.grey.shade500)),
+                  ])),
+              Container(
+                padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
+                decoration: BoxDecoration(
+                  color: (isAnswered
+                          ? const Color(0xFF27AE60)
+                          : const Color(0xFFE8913A))
+                      .withOpacity(0.15),
+                  borderRadius: BorderRadius.circular(20),
+                ),
+                child: Text(trangThai,
+                    style: TextStyle(
+                        fontSize: 11,
+                        fontWeight: FontWeight.w600,
+                        color: isAnswered
+                            ? const Color(0xFF27AE60)
+                            : const Color(0xFFE8913A))),
+              ),
             ]),
-            if (traLoi != null && traLoi.toString().isNotEmpty) ...[
-              const Divider(height: 20),
+          ),
+          // Content
+          Padding(
+            padding: const EdgeInsets.all(16),
+            child:
+                Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
+              // Tiêu đề & Loại hỗ trợ
+              if (tieuDe.isNotEmpty) ...[
+                Text(tieuDe,
+                    style: const TextStyle(
+                        fontSize: 14, fontWeight: FontWeight.w600)),
+                const SizedBox(height: 4),
+              ],
+              if (loaiHoTro.isNotEmpty)
+                Container(
+                  margin: const EdgeInsets.only(bottom: 8),
+                  padding:
+                      const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
+                  decoration: BoxDecoration(
+                    color: const Color(0xFF2563EB).withOpacity(0.08),
+                    borderRadius: BorderRadius.circular(6),
+                  ),
+                  child: Text(loaiHoTro,
+                      style: const TextStyle(
+                          fontSize: 11,
+                          color: Color(0xFF2563EB),
+                          fontWeight: FontWeight.w500)),
+                ),
               Row(crossAxisAlignment: CrossAxisAlignment.start, children: [
-                Icon(Icons.chat_bubble_outline_rounded,
-                    size: 18, color: const Color(0xFF27AE60).withOpacity(0.7)),
+                Icon(Icons.help_outline_rounded,
+                    size: 18, color: const Color(0xFFE8913A).withOpacity(0.7)),
                 const SizedBox(width: 8),
                 Expanded(
-                    child: Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                      Text(traLoi,
-                          style: const TextStyle(
-                              fontSize: 14,
-                              color: Color(0xFF27AE60),
-                              height: 1.4)),
-                      if (thoiGianTraLoi.isNotEmpty)
-                        Text('Trả lời lúc: $thoiGianTraLoi',
-                            style: TextStyle(
-                                fontSize: 11, color: Colors.grey.shade500)),
-                    ])),
+                    child: Text(cauHoi,
+                        style: const TextStyle(fontSize: 14, height: 1.4),
+                        maxLines: 3,
+                        overflow: TextOverflow.ellipsis)),
               ]),
-            ],
-            if (isPending) ...[
+              if (traLoi != null && traLoi.toString().isNotEmpty) ...[
+                const Divider(height: 20),
+                Row(crossAxisAlignment: CrossAxisAlignment.start, children: [
+                  Icon(Icons.chat_bubble_outline_rounded,
+                      size: 18, color: const Color(0xFF27AE60).withOpacity(0.7)),
+                  const SizedBox(width: 8),
+                  Expanded(
+                      child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                    Text(traLoi,
+                        style: const TextStyle(
+                            fontSize: 14,
+                            color: Color(0xFF27AE60),
+                            height: 1.4),
+                        maxLines: 2,
+                        overflow: TextOverflow.ellipsis),
+                    if (thoiGianTraLoi.isNotEmpty)
+                      Text('Trả lời lúc: $thoiGianTraLoi',
+                          style: TextStyle(
+                              fontSize: 11, color: Colors.grey.shade500)),
+                  ])),
+                ]),
+              ],
               const SizedBox(height: 12),
-              SizedBox(
-                width: double.infinity,
-                child: ElevatedButton.icon(
-                  icon: const Icon(Icons.reply_rounded, size: 18),
-                  label: const Text('Trả lời câu hỏi',
-                      style: TextStyle(fontWeight: FontWeight.w600)),
-                  style: ElevatedButton.styleFrom(
-                    backgroundColor: const Color(0xFF2563EB),
-                    foregroundColor: Colors.white,
-                    shape: RoundedRectangleBorder(
-                        borderRadius: BorderRadius.circular(12)),
-                    padding: const EdgeInsets.symmetric(vertical: 12),
+              // Action buttons
+              Row(children: [
+                Expanded(
+                  child: OutlinedButton.icon(
+                    icon: const Icon(Icons.chat_rounded, size: 16),
+                    label: const Text('Mở chat',
+                        style: TextStyle(fontWeight: FontWeight.w600)),
+                    style: OutlinedButton.styleFrom(
+                      foregroundColor: const Color(0xFF2563EB),
+                      side: const BorderSide(color: Color(0xFF2563EB)),
+                      shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(12)),
+                      padding: const EdgeInsets.symmetric(vertical: 10),
+                    ),
+                    onPressed: () => _openChat(q),
                   ),
-                  onPressed: () => _showReplySheet(q),
                 ),
-              ),
-            ],
-          ]),
-        ),
-      ]),
+                if (isPending) ...[
+                  const SizedBox(width: 10),
+                  Expanded(
+                    child: ElevatedButton.icon(
+                      icon: const Icon(Icons.reply_rounded, size: 16),
+                      label: const Text('Trả lời nhanh',
+                          style: TextStyle(fontWeight: FontWeight.w600)),
+                      style: ElevatedButton.styleFrom(
+                        backgroundColor: const Color(0xFF27AE60),
+                        foregroundColor: Colors.white,
+                        shape: RoundedRectangleBorder(
+                            borderRadius: BorderRadius.circular(12)),
+                        padding: const EdgeInsets.symmetric(vertical: 10),
+                      ),
+                      onPressed: () => _showReplySheet(q),
+                    ),
+                  ),
+                ],
+              ]),
+            ]),
+          ),
+        ]),
+      ),
     );
+  }
+
+  void _openChat(Map<String, dynamic> q) {
+    Navigator.push(
+      context,
+      MaterialPageRoute(
+        builder: (_) => SaleSupportChatScreen(ticket: q),
+      ),
+    ).then((_) => _loadData());
   }
 
   void _showReplySheet(Map<String, dynamic> q) {
