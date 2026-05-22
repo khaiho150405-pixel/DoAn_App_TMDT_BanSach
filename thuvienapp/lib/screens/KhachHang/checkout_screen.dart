@@ -6,6 +6,7 @@ import '../../providers/cart_provider.dart';
 import '../../providers/order_provider.dart';
 import '../../providers/api_service.dart';
 import '../../theme/app_theme.dart';
+import 'qr_payment_screen.dart';
 
 class CheckoutScreen extends StatefulWidget {
   final List<CartItem> cartItems;
@@ -23,6 +24,7 @@ class _CheckoutScreenState extends State<CheckoutScreen> {
   final _phoneController = TextEditingController();
   final _noteController = TextEditingController();
   String _paymentMethod = 'COD';
+  String? _selectedBank;
   bool _isProcessing = false;
 
   final Color primaryBlue = AppColors.primaryBlue;
@@ -77,7 +79,7 @@ class _CheckoutScreenState extends State<CheckoutScreen> {
             .toList()
       };
 
-      await Provider.of<OrderProvider>(context, listen: false)
+      final order = await Provider.of<OrderProvider>(context, listen: false)
           .checkout(requestBody);
 
       if (mounted) {
@@ -86,6 +88,20 @@ class _CheckoutScreenState extends State<CheckoutScreen> {
         // Xóa giỏ hàng sau khi mua (nếu là mua từ giỏ hàng)
         if (widget.cartItems.length > 1 || widget.cartItems.isNotEmpty) {
           Provider.of<CartProvider>(context, listen: false).clearCart();
+        }
+
+        // Nếu chọn phương thức chuyển khoản => Chuyển sang màn hình QR
+        if (_paymentMethod == 'Banking') {
+          Navigator.pushReplacement(
+            context,
+            MaterialPageRoute(
+              builder: (_) => QrPaymentScreen(
+                amount: _totalPrice,
+                orderCode: order.maDH,
+              ),
+            ),
+          );
+          return;
         }
 
         showDialog(
@@ -288,11 +304,107 @@ class _CheckoutScreenState extends State<CheckoutScreen> {
                     RadioListTile<String>(
                         value: 'Banking',
                         groupValue: _paymentMethod,
-                        onChanged: (v) => setState(() => _paymentMethod = v!),
+                        onChanged: (v) => setState(() {
+                          _paymentMethod = v!;
+                          _selectedBank = 'MOMO';
+                        }),
                         title: const Text('Chuyển khoản ngân hàng',
                             style: TextStyle(fontSize: 14)),
                         activeColor: primaryBlue,
                         contentPadding: EdgeInsets.zero),
+
+                    // --- CHỌN NGÂN HÀNG KHI DÙNG CHUYỂN KHOẢN ---
+                    if (_paymentMethod == 'Banking') ...[
+                      const SizedBox(height: 8),
+                      Padding(
+                        padding: const EdgeInsets.only(left: 16),
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            Text(
+                              'Chọn ngân hàng muốn chuyển:',
+                              style: TextStyle(
+                                fontSize: 13,
+                                fontWeight: FontWeight.w600,
+                                color: Colors.grey[700],
+                              ),
+                            ),
+                            const SizedBox(height: 8),
+                            GestureDetector(
+                              onTap: () => setState(() => _selectedBank = 'MOMO'),
+                              child: Container(
+                                padding: const EdgeInsets.symmetric(
+                                    horizontal: 14, vertical: 12),
+                                decoration: BoxDecoration(
+                                  color: _selectedBank == 'MOMO'
+                                      ? const Color(0xFFFFF0F6)
+                                      : Colors.grey[50],
+                                  borderRadius: BorderRadius.circular(12),
+                                  border: Border.all(
+                                    color: _selectedBank == 'MOMO'
+                                        ? const Color(0xFFAE2070)
+                                        : Colors.grey.shade300,
+                                    width: _selectedBank == 'MOMO' ? 1.5 : 1,
+                                  ),
+                                ),
+                                child: Row(
+                                  children: [
+                                    Container(
+                                      width: 40,
+                                      height: 40,
+                                      decoration: BoxDecoration(
+                                        color: const Color(0xFFAE2070),
+                                        borderRadius: BorderRadius.circular(8),
+                                      ),
+                                      child: const Center(
+                                        child: Text(
+                                          'M',
+                                          style: TextStyle(
+                                            color: Colors.white,
+                                            fontWeight: FontWeight.bold,
+                                            fontSize: 20,
+                                          ),
+                                        ),
+                                      ),
+                                    ),
+                                    const SizedBox(width: 12),
+                                    Expanded(
+                                      child: Column(
+                                        crossAxisAlignment:
+                                            CrossAxisAlignment.start,
+                                        children: [
+                                          const Text(
+                                            'Ví MoMo',
+                                            style: TextStyle(
+                                              fontWeight: FontWeight.bold,
+                                              fontSize: 14,
+                                              color: Colors.black87,
+                                            ),
+                                          ),
+                                          Text(
+                                            'Quét mã QR thanh toán nhanh',
+                                            style: TextStyle(
+                                              fontSize: 12,
+                                              color: Colors.grey[600],
+                                            ),
+                                          ),
+                                        ],
+                                      ),
+                                    ),
+                                    if (_selectedBank == 'MOMO')
+                                      const Icon(
+                                        Icons.check_circle,
+                                        color: Color(0xFFAE2070),
+                                        size: 22,
+                                      ),
+                                  ],
+                                ),
+                              ),
+                            ),
+                          ],
+                        ),
+                      ),
+                    ],
                   ])),
           const SizedBox(height: 8),
           // Tổng tiền

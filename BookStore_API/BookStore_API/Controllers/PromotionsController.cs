@@ -40,6 +40,40 @@ namespace BookStoreAPI.Controllers
             return Ok(promotions);
         }
 
+        [HttpGet("ai-generated")]
+        public async Task<IActionResult> GetAiGenerated()
+        {
+            var now = DateTime.Now;
+
+            var aiPromos = await _context.Khuyenmais
+                .Where(km => km.Tenkm.StartsWith("[AI]") && km.Ngayketthuc >= now)
+                .OrderByDescending(km => km.Ngaybatdau)
+                .Select(km => new
+                {
+                    MaKM = km.Makm,
+                    TenKM = km.Tenkm,
+                    MoTa = km.Mota,
+                    PhanTramGiam = km.Phantramgiam,
+                    NgayBatDau = km.Ngaybatdau,
+                    NgayKetThuc = km.Ngayketthuc,
+                    TrangThai = km.Ngayketthuc < now ? "Đã kết thúc"
+                              : km.Ngaybatdau > now ? "Sắp diễn ra"
+                              : "Đang diễn ra",
+                    SoSachApDung = km.Saches.Count,
+                    DanhSachSach = km.Saches.Select(s => new
+                    {
+                        MaSach = s.Masach,
+                        TenSach = s.Tensach,
+                        HinhAnh = s.Hinhanh,
+                        GiaBan = s.Giaban,
+                        TenTacGia = s.MatgNavigation.Tentg
+                    }).ToList()
+                })
+                .ToListAsync();
+
+            return Ok(aiPromos);
+        }
+
         [HttpPost]
         public async Task<IActionResult> Create([FromBody] PromotionCreateRequest request)
         {

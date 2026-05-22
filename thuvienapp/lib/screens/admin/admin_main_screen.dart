@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import '../dashboard_screen.dart';
 import 'user_management_screen.dart';
 import 'promotion_management_screen.dart';
+import 'mining_screen.dart';
 import 'admin_settings_screen.dart';
 
 class AdminMainScreen extends StatefulWidget {
@@ -18,6 +19,7 @@ class _AdminMainScreenState extends State<AdminMainScreen> {
     const DashboardScreen(),
     const UserManagementScreen(),
     const PromotionManagementScreen(),
+    const MiningScreen(),
     const AdminSettingsScreen(),
   ];
 
@@ -52,6 +54,11 @@ class _AdminMainScreenState extends State<AdminMainScreen> {
             icon: Icon(Icons.local_offer_outlined),
             activeIcon: Icon(Icons.local_offer),
             label: 'Khuyến mãi',
+          ),
+          BottomNavigationBarItem(
+            icon: Icon(Icons.analytics_outlined),
+            activeIcon: Icon(Icons.analytics),
+            label: 'Phân tích',
           ),
           BottomNavigationBarItem(
             icon: Icon(Icons.settings_outlined),
